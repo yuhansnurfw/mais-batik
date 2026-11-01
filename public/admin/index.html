@@ -56,6 +56,7 @@
           <button class="tab-btn active" type="button" data-tab="orders">Pesanan <span id="orders-count-badge">0</span></button>
           <button class="tab-btn" type="button" data-tab="products">Produk <span id="products-count-badge">0</span></button>
           <button class="tab-btn" type="button" data-tab="categories">Kategori</button>
+          <button class="tab-btn" type="button" data-tab="settings">⚙️ Koneksi Supabase</button>
         </nav>
 
         <!-- TAB PESANAN -->
@@ -96,6 +97,28 @@
           <div class="records-grid" id="categories-list-container">
             <p style="color:var(--ink-soft); padding:1rem;">Memuat kategori...</p>
           </div>
+        </section>
+
+        <!-- TAB PENGATURAN SUPABASE -->
+        <section class="management-section tab-content" id="tab-settings" style="display:none;">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Konfigurasi Cloud</p>
+              <h2>Koneksi Database Supabase</h2>
+            </div>
+          </div>
+          <form class="form-grid" id="supabase-settings-form" style="max-width:650px; background:var(--paper); padding:1.5rem; border:1px solid var(--line); border-radius:4px;">
+            <p style="font-size:0.88rem; color:var(--ink-soft); line-height:1.6; margin-bottom:1rem;">
+              Dapatkan data ini di dashboard Supabase Anda: buka <strong>Project Settings</strong> (ikon gerigi) &rarr; <strong>API</strong>.
+            </p>
+            <label>Project URL
+              <input type="url" id="sb-url-input" required placeholder="https://xxxxxxxxxxxx.supabase.co">
+            </label>
+            <label>API Key (anon / public key)
+              <textarea id="sb-key-input" rows="3" required placeholder="eyJhbGciOi..."></textarea>
+            </label>
+            <button class="button button-primary" type="submit" style="margin-top:0.5rem;">Simpan & Sambungkan ke Supabase</button>
+          </form>
         </section>
       </div>
     </main>
@@ -164,9 +187,68 @@
           });
         });
 
+        const sbSettingsForm = document.getElementById("supabase-settings-form");
+        const sbUrlInput = document.getElementById("sb-url-input");
+        const sbKeyInput = document.getElementById("sb-key-input");
+
+        const updateSettingsInputs = () => {
+          const c = window.MaisBatikDB?.getConfig() || {};
+          if (sbUrlInput && c.url && !c.url.includes("GANTI_DENGAN")) sbUrlInput.value = c.url;
+          if (sbKeyInput && c.anonKey && !c.anonKey.includes("GANTI_DENGAN")) sbKeyInput.value = c.anonKey;
+        };
+
+        const handleSaveSupabaseConfig = (url, key) => {
+          if (!url || !key) {
+            showNotice("URL dan Key wajib diisi.", "error");
+            return false;
+          }
+          window.MaisBatikDB?.saveConfig(url, key);
+          showNotice("Koneksi Supabase berhasil disimpan! Memuat data...", "success");
+          updateSettingsInputs();
+          const authKey = sessionStorage.getItem("mais_batik_admin_auth") || "admin123";
+          loadAllData(authKey);
+          return true;
+        };
+
+        sbSettingsForm?.addEventListener("submit", (e) => {
+          e.preventDefault();
+          handleSaveSupabaseConfig(sbUrlInput.value.trim(), sbKeyInput.value.trim());
+        });
+
         const loadAllData = async (authKey) => {
+          updateSettingsInputs();
+
           if (!window.MaisBatikDB?.isConfigured()) {
-            ordersContainer.innerHTML = '<p style="color:#b85b35; padding:1rem;">Koneksi Supabase belum diatur di <code>assets/js/supabase-config.js</code>.</p>';
+            const setupHtml = `
+              <div style="background:var(--paper); padding:1.5rem; border:1px solid var(--line); border-radius:4px; max-width:650px;">
+                <p class="eyebrow" style="color:#b85b35;">Koneksi Belum Terhubung</p>
+                <h3 style="margin-bottom:0.4rem;">Hubungkan ke Database Supabase Anda</h3>
+                <p style="font-size:0.88rem; color:var(--ink-soft); line-height:1.6; margin-bottom:1rem;">
+                  Database di Supabase sudah siap! Sekarang cukup salin <strong>Project URL</strong> dan <strong>anon key</strong> dari dashboard Supabase (<a href="https://supabase.com/dashboard" target="_blank" style="text-decoration:underline;">supabase.com</a> &rarr; <em>Project Settings</em> &rarr; <em>API</em>) lalu tempelkan di bawah:
+                </p>
+                <form id="inline-sb-form" class="form-grid" style="display:flex; flex-direction:column; gap:0.75rem;">
+                  <label>Project URL
+                    <input type="url" id="inline-sb-url" required placeholder="https://xxxxxxxxxxxx.supabase.co" style="padding:0.6rem; border:1px solid var(--line); border-radius:4px;">
+                  </label>
+                  <label>API Key (anon / public key)
+                    <textarea id="inline-sb-key" rows="3" required placeholder="eyJhbGciOi..." style="padding:0.6rem; border:1px solid var(--line); border-radius:4px; font-family:monospace; font-size:0.8rem;"></textarea>
+                  </label>
+                  <button class="button button-primary" type="submit" style="align-self:flex-start;">Simpan & Sambungkan Database</button>
+                </form>
+              </div>
+            `;
+            ordersContainer.innerHTML = setupHtml;
+            productsContainer.innerHTML = setupHtml;
+            categoriesContainer.innerHTML = setupHtml;
+
+            document.querySelectorAll("#inline-sb-form").forEach(f => {
+              f.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const url = f.querySelector("#inline-sb-url")?.value?.trim();
+                const key = f.querySelector("#inline-sb-key")?.value?.trim();
+                handleSaveSupabaseConfig(url, key);
+              });
+            });
             return;
           }
 

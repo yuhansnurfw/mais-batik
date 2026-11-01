@@ -3,7 +3,27 @@
  * Mendukung panggilan langsung ke REST API PostgREST Supabase tanpa memerlukan build step.
  */
 (() => {
-  const cfg = () => window.SUPABASE_CONFIG || {};
+  const cfg = () => {
+    let localUrl = "";
+    let localKey = "";
+    let localAdmin = "";
+    try {
+      localUrl = localStorage.getItem("mais_batik_supabase_url") || "";
+      localKey = localStorage.getItem("mais_batik_supabase_key") || "";
+      localAdmin = localStorage.getItem("mais_batik_supabase_admin_key") || "";
+    } catch (_) {}
+
+    const winCfg = window.SUPABASE_CONFIG || {};
+    const effectiveUrl = (localUrl && !localUrl.includes("GANTI_DENGAN")) ? localUrl : (winCfg.url || "");
+    const effectiveKey = (localKey && !localKey.includes("GANTI_DENGAN")) ? localKey : (winCfg.anonKey || "");
+    const effectiveAdmin = localAdmin || winCfg.adminKey || "";
+
+    return {
+      url: effectiveUrl,
+      anonKey: effectiveKey,
+      adminKey: effectiveAdmin,
+    };
+  };
 
   const isConfigured = () => {
     const c = cfg();
@@ -13,6 +33,21 @@
       !c.url.includes("GANTI_DENGAN") &&
       !c.anonKey.includes("GANTI_DENGAN")
     );
+  };
+
+  const saveConfig = (url, anonKey, adminKey = "") => {
+    try {
+      if (url) localStorage.setItem("mais_batik_supabase_url", url.trim());
+      if (anonKey) localStorage.setItem("mais_batik_supabase_key", anonKey.trim());
+      if (adminKey) localStorage.setItem("mais_batik_supabase_admin_key", adminKey.trim());
+      if (window.SUPABASE_CONFIG) {
+        if (url) window.SUPABASE_CONFIG.url = url.trim();
+        if (anonKey) window.SUPABASE_CONFIG.anonKey = anonKey.trim();
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
   };
 
   const getHeaders = (customToken) => {
@@ -34,6 +69,8 @@
 
   window.MaisBatikDB = {
     isConfigured,
+    saveConfig,
+    getConfig: cfg,
 
     async getCategories() {
       if (!isConfigured()) return [];
