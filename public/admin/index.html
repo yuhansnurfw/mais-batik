@@ -4,19 +4,117 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>Panel Admin — Mais Batik (Supabase Cloud)</title>
+    <title>Panel Admin — Mais Batik</title>
     <link rel="stylesheet" href="../assets/css/admin.css">
     <script src="../assets/js/theme.js" defer></script>
     <script src="../assets/js/supabase-config.js" defer></script>
     <script src="../assets/js/supabase-client.js" defer></script>
+    <style>
+      .login-form-box {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+      }
+      .login-form-box label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--admin-ink);
+      }
+      .login-form-box input {
+        padding: 0.65rem 0.75rem;
+        border: 1px solid var(--admin-line);
+        background: var(--admin-white);
+        color: var(--admin-ink);
+        font: inherit;
+        font-size: 0.85rem;
+      }
+      .login-form-box input:focus {
+        border-color: var(--admin-green);
+        outline: 2px solid rgb(41 70 60 / 15%);
+      }
+      .status-filter-bar {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+      .filter-chip {
+        padding: 0.3rem 0.75rem;
+        border: 1px solid var(--admin-line);
+        border-radius: 20px;
+        background: var(--admin-white);
+        color: var(--admin-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .filter-chip.active {
+        background: var(--admin-green);
+        color: white;
+        border-color: var(--admin-green);
+      }
+      .sql-card {
+        background: var(--admin-white);
+        border: 1px solid #e2ded5;
+        border-left: 4px solid #b65e3d;
+        padding: 1.25rem 1.5rem;
+        border-radius: 4px;
+        margin-bottom: 1.25rem;
+      }
+      .sql-snippet-box {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #eeece5;
+        padding: 0.65rem 0.9rem;
+        border-radius: 4px;
+        margin: 0.75rem 0;
+      }
+      .sql-snippet-box code {
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: #8a3d32;
+        flex: 1;
+        overflow-x: auto;
+      }
+      .copy-btn {
+        padding: 0.35rem 0.75rem;
+        border: 1px solid var(--admin-line);
+        background: white;
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
+        border-radius: 3px;
+        white-space: nowrap;
+      }
+      .copy-btn:hover {
+        border-color: var(--admin-green);
+      }
+      .quick-secret-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        max-width: 520px;
+      }
+      .quick-secret-row input {
+        flex: 1;
+        padding: 0.45rem 0.65rem;
+        border: 1px solid var(--admin-line);
+        font-size: 0.8rem;
+      }
+    </style>
   </head>
   <body>
     <header class="admin-header">
-      <a class="admin-brand" href="../">Mais<span>Batik</span><small>ADMIN CLOUD</small></a>
+      <a class="admin-brand" href="../">Mais<span>Batik</span><small>ADMINISTRATOR</small></a>
       <div class="admin-header-tools">
         <button class="theme-toggle" type="button" data-theme-toggle aria-label="Aktifkan mode gelap" aria-pressed="false" title="Aktifkan mode gelap">
           <span class="theme-icon" aria-hidden="true">☾</span>
         </button>
+        <a href="../" class="button button-quiet" style="font-size:0.75rem;">Storefront ↗</a>
         <button class="button button-quiet" type="button" id="admin-logout-btn" style="display:none;">Keluar</button>
       </div>
     </header>
@@ -27,16 +125,18 @@
       <!-- PANEL LOGIN ADMIN -->
       <section class="login-panel" id="admin-login-section">
         <p class="eyebrow">Area terbatas</p>
-        <h1>Masuk ke panel admin</h1>
-        <p>Akses manajemen data berbasis Supabase Cloud & Vercel.</p>
-        <form class="form-grid" id="admin-login-form">
-          <label>Kata Sandi Admin / Secret Key
-            <input type="password" id="admin-secret-input" required placeholder="Masukkan kata sandi admin...">
+        <h1 style="margin-top:0.25rem;">Masuk ke panel admin</h1>
+        <p style="color:var(--admin-muted); font-size:0.85rem;">Kelola pesanan pelanggan dan katalog produk Mais Batik.</p>
+        
+        <form class="login-form-box" id="admin-login-form">
+          <label>Kata Sandi Admin
+            <input type="password" id="admin-secret-input" required placeholder="Masukkan kata sandi...">
           </label>
-          <button class="button button-primary" type="submit">Masuk ke Panel</button>
+          <button class="button button-primary" type="submit" style="width:100%; margin-top:0.5rem;">Masuk ke Panel</button>
         </form>
-        <p style="font-size:0.85rem; color:var(--ink-soft); margin-top:0.75rem;">
-          Default kata sandi lokal: <code>admin123</code> atau gunakan Service Role Key dari dashboard Supabase.
+
+        <p style="font-size:0.82rem; color:var(--admin-muted); margin-top:1rem; line-height:1.5;">
+          Kata sandi standar: <code>admin123</code>. Anda juga dapat menggunakan Secret Key Supabase (<code>sb_secret_...</code>).
         </p>
         <a class="back-link" href="../">← Kembali ke storefront</a>
       </section>
@@ -46,7 +146,7 @@
         <section class="dashboard-heading">
           <div>
             <p class="eyebrow">Mais Batik · Cloud Workspace</p>
-            <h1>Kelola data (Supabase)</h1>
+            <h1>Kelola Data Toko</h1>
             <p>Atur katalog produk dan pantau pesanan pelanggan secara real-time.</p>
           </div>
           <a class="back-link" href="../">Lihat storefront <span aria-hidden="true">↗</span></a>
@@ -55,7 +155,8 @@
         <nav class="admin-tabs" aria-label="Bagian pengelolaan">
           <button class="tab-btn active" type="button" data-tab="orders">Pesanan <span id="orders-count-badge">0</span></button>
           <button class="tab-btn" type="button" data-tab="products">Produk <span id="products-count-badge">0</span></button>
-          <button class="tab-btn" type="button" data-tab="categories">Kategori</button>
+          <button class="tab-btn" type="button" data-tab="categories">Kategori <span id="categories-count-badge">0</span></button>
+          <button class="tab-btn" type="button" data-tab="add-product">+ Tambah Produk</button>
           <button class="tab-btn" type="button" data-tab="settings">⚙️ Koneksi Supabase</button>
         </nav>
 
@@ -68,8 +169,17 @@
             </div>
             <button class="button button-quiet" type="button" id="refresh-orders-btn">Segarkan Data ⟳</button>
           </div>
+
+          <div class="status-filter-bar" id="orders-filter-bar">
+            <button class="filter-chip active" type="button" data-status-filter="all">Semua Status</button>
+            <button class="filter-chip" type="button" data-status-filter="baru">Baru</button>
+            <button class="filter-chip" type="button" data-status-filter="diproses">Diproses</button>
+            <button class="filter-chip" type="button" data-status-filter="selesai">Selesai</button>
+            <button class="filter-chip" type="button" data-status-filter="dibatalkan">Dibatalkan</button>
+          </div>
+
           <div class="records-grid" id="orders-list-container">
-            <p style="color:var(--ink-soft); padding:1rem;">Memuat daftar pesanan dari Supabase...</p>
+            <p style="color:var(--admin-muted); padding:1rem;">Memuat daftar pesanan dari Supabase...</p>
           </div>
         </section>
 
@@ -77,12 +187,13 @@
         <section class="management-section tab-content" id="tab-products" style="display:none;">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Katalog</p>
+              <p class="eyebrow">Katalog Toko</p>
               <h2>Produk Tersedia</h2>
             </div>
+            <button class="button button-primary" type="button" onclick="document.querySelector('[data-tab=add-product]').click()">+ Tambah Produk Baru</button>
           </div>
           <div class="records-grid" id="products-list-container">
-            <p style="color:var(--ink-soft); padding:1rem;">Memuat produk dari Supabase...</p>
+            <p style="color:var(--admin-muted); padding:1rem;">Memuat produk dari Supabase...</p>
           </div>
         </section>
 
@@ -95,7 +206,58 @@
             </div>
           </div>
           <div class="records-grid" id="categories-list-container">
-            <p style="color:var(--ink-soft); padding:1rem;">Memuat kategori...</p>
+            <p style="color:var(--admin-muted); padding:1rem;">Memuat kategori...</p>
+          </div>
+        </section>
+
+        <!-- TAB TAMBAH PRODUK -->
+        <section class="management-section tab-content" id="tab-add-product" style="display:none;">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Katalog Baru</p>
+              <h2>Tambah Produk ke Supabase</h2>
+            </div>
+          </div>
+          <div class="editor-card" style="max-width:760px;">
+            <form class="form-grid" id="create-product-form">
+              <label>Nama Produk
+                <input name="name" required placeholder="Contoh: Kemeja Batik Parang Modern" maxlength="120">
+              </label>
+              <label>Kategori
+                <select name="category_id" id="product-category-select" required>
+                  <option value="">Pilih kategori...</option>
+                </select>
+              </label>
+              <label>Varian / Ukuran
+                <input name="variant" required placeholder="Motif Parang · S, M, L, XL" maxlength="160">
+              </label>
+              <label>Foto Produk
+                <select name="image_path" required>
+                  <option value="assets/images/placeholder.jpg">Standar (Placeholder)</option>
+                  <option value="assets/images/baju-koko.webp">Baju Koko</option>
+                  <option value="assets/images/sarung-instan-anak.webp">Sarung Instan Anak</option>
+                  <option value="assets/images/blouse-batik.webp">Blouse Batik</option>
+                </select>
+              </label>
+              <label>Harga Minimum (Rp)
+                <input name="price_min" type="number" required min="1" step="1000" placeholder="150000">
+              </label>
+              <label>Harga Maksimum (Rp)
+                <input name="price_max" type="number" required min="1" step="1000" placeholder="250000">
+              </label>
+              <label>Stok Barang
+                <input name="stock" type="number" required min="0" value="10">
+              </label>
+              <label>Status Tampil
+                <select name="status">
+                  <option value="active">Aktif (Tampil di Katalog)</option>
+                  <option value="inactive">Nonaktif (Sembunyikan)</option>
+                </select>
+              </label>
+              <div class="form-actions">
+                <button class="button button-primary" type="submit" id="save-product-btn">Simpan Produk ke Supabase</button>
+              </div>
+            </form>
           </div>
         </section>
 
@@ -107,18 +269,34 @@
               <h2>Koneksi Database Supabase</h2>
             </div>
           </div>
-          <form class="form-grid" id="supabase-settings-form" style="max-width:650px; background:var(--paper); padding:1.5rem; border:1px solid var(--line); border-radius:4px;">
-            <p style="font-size:0.88rem; color:var(--ink-soft); line-height:1.6; margin-bottom:1rem;">
-              Dapatkan data ini di dashboard Supabase Anda: buka <strong>Project Settings</strong> (ikon gerigi) &rarr; <strong>API</strong>.
+          <form class="form-grid" id="supabase-settings-form" style="max-width:680px; background:var(--admin-white); padding:1.5rem; border:1px solid var(--admin-line); border-radius:4px;">
+            <p style="font-size:0.85rem; color:var(--admin-muted); line-height:1.6; margin-bottom:1rem; grid-column: 1 / -1;">
+              Koneksi ini tersimpan secara lokal di browser Anda dan aman dari publikasi repositori GitHub.
             </p>
-            <label>Project URL
+            <label class="full-width">Project URL
               <input type="url" id="sb-url-input" required placeholder="https://xxxxxxxxxxxx.supabase.co">
             </label>
-            <label>API Key (anon / public key)
-              <textarea id="sb-key-input" rows="3" required placeholder="eyJhbGciOi..."></textarea>
+            <label class="full-width">Publishable Key (Anon Key)
+              <textarea id="sb-key-input" rows="2" required placeholder="sb_publishable_..."></textarea>
             </label>
-            <button class="button button-primary" type="submit" style="margin-top:0.5rem;">Simpan & Sambungkan ke Supabase</button>
+            <label class="full-width">Secret Key (Opsional, untuk bypass RLS penuh)
+              <input type="password" id="sb-admin-key-input" placeholder="sb_secret_...">
+            </label>
+            <div class="form-actions">
+              <button class="button button-primary" type="submit">Simpan Konfigurasi</button>
+            </div>
           </form>
+
+          <div style="margin-top:2rem; max-width:680px;" class="sql-card">
+            <h3 style="font-family:Georgia,serif; margin:0 0 0.5rem; font-size:1.15rem;">Buka Izin Tabel Supabase (RLS Fix)</h3>
+            <p style="font-size:0.82rem; color:var(--admin-muted); line-height:1.5; margin-bottom:0.75rem;">
+              Jika ingin panel admin dapat diakses bebas di mana saja hanya dengan kata sandi <code>admin123</code> tanpa perlu memasukkan Secret Key, jalankan skrip berikut di <strong>Supabase SQL Editor</strong>:
+            </p>
+            <div class="sql-snippet-box">
+              <code>ALTER TABLE public.orders DISABLE ROW LEVEL SECURITY;</code>
+              <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('ALTER TABLE public.orders DISABLE ROW LEVEL SECURITY;\nALTER TABLE public.products DISABLE ROW LEVEL SECURITY;\nALTER TABLE public.categories DISABLE ROW LEVEL SECURITY;'); alert('Kode SQL berhasil disalin! Tempelkan di Supabase SQL Editor.');">Salin SQL Lengkap</button>
+            </div>
+          </div>
         </section>
       </div>
     </main>
@@ -136,12 +314,27 @@
         const categoriesContainer = document.getElementById("categories-list-container");
         const ordersBadge = document.getElementById("orders-count-badge");
         const productsBadge = document.getElementById("products-count-badge");
+        const categoriesBadge = document.getElementById("categories-count-badge");
+        const categorySelect = document.getElementById("product-category-select");
+
+        let cachedOrders = [];
+        let activeStatusFilter = "all";
+
+        const escapeHtml = (str) => {
+          if (!str) return "";
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+        };
 
         const showNotice = (msg, type = "info") => {
           notice.textContent = msg;
           notice.className = `notice notice-${type}`;
-          notice.style.display = "block";
-          setTimeout(() => { notice.style.display = "none"; }, 5000);
+          notice.style.display = "flex";
+          setTimeout(() => { notice.style.display = "none"; }, 6000);
         };
 
         const checkAuth = () => {
@@ -149,7 +342,7 @@
           if (authKey) {
             loginSection.style.display = "none";
             dashboardSection.style.display = "block";
-            logoutBtn.style.display = "inline-block";
+            logoutBtn.style.display = "inline-flex";
             loadAllData(authKey);
           } else {
             loginSection.style.display = "block";
@@ -161,17 +354,17 @@
         loginForm.addEventListener("submit", (e) => {
           e.preventDefault();
           const pass = secretInput.value.trim();
-          const configKey = window.SUPABASE_CONFIG?.adminKey || "admin123";
           const isSecret = pass.startsWith("sb_secret_") || (pass.length > 20 && pass.startsWith("eyJ"));
-          if (pass === "admin123" || pass === configKey || isSecret) {
+
+          if (pass === "admin123" || isSecret) {
             sessionStorage.setItem("mais_batik_admin_auth", pass);
             if (isSecret) {
               window.MaisBatikDB?.saveConfig(undefined, undefined, pass);
             }
             checkAuth();
-            showNotice("Berhasil masuk ke panel admin.", "success");
+            showNotice("Selamat datang di panel admin Mais Batik.", "success");
           } else {
-            showNotice("Kata sandi salah. Gunakan Secret Key Supabase (sb_secret_...) atau admin123.", "error");
+            showNotice("Kata sandi salah. Gunakan admin123 atau Secret Key Supabase.", "error");
           }
         });
 
@@ -191,146 +384,274 @@
           });
         });
 
-        const sbSettingsForm = document.getElementById("supabase-settings-form");
-        const sbUrlInput = document.getElementById("sb-url-input");
-        const sbKeyInput = document.getElementById("sb-key-input");
+        // Orders Status Filter
+        document.querySelectorAll("#orders-filter-bar .filter-chip").forEach((chip) => {
+          chip.addEventListener("click", () => {
+            document.querySelectorAll("#orders-filter-bar .filter-chip").forEach(c => c.classList.remove("active"));
+            chip.classList.add("active");
+            activeStatusFilter = chip.dataset.statusFilter;
+            renderOrders();
+          });
+        });
+
+        const renderOrders = () => {
+          const authKey = sessionStorage.getItem("mais_batik_admin_auth") || "admin123";
+          const filtered = activeStatusFilter === "all"
+            ? cachedOrders
+            : cachedOrders.filter(o => o.status === activeStatusFilter);
+
+          if (filtered.length === 0) {
+            ordersContainer.innerHTML = `
+              <div class="empty-state">
+                <p style="margin:0;">Tidak ada pesanan dengan status <strong>${activeStatusFilter}</strong>.</p>
+              </div>
+            `;
+            return;
+          }
+
+          ordersContainer.innerHTML = filtered.map(o => `
+            <article class="record-card order-record" id="order-row-${o.id}">
+              <div class="order-mark">#${o.id}</div>
+              <div class="record-summary">
+                <span class="record-meta">${escapeHtml(o.customer_name)} · ${new Date(o.created_at).toLocaleString('id-ID')}</span>
+                <h3>${escapeHtml(o.product_name)} <span class="status-pill status-${o.status}">${o.status}</span></h3>
+                <p>Telp: <strong>${escapeHtml(o.customer_phone)}</strong> · Email: ${escapeHtml(o.customer_email)}</p>
+                <p>Varian: <strong>${escapeHtml(o.variant)}</strong> · ${o.quantity} pcs × Rp${new Intl.NumberFormat('id-ID').format(o.unit_price)} · Total: <strong>Rp${new Intl.NumberFormat('id-ID').format(o.quantity * o.unit_price)}</strong></p>
+                ${o.notes ? `<p style="font-style:italic; margin-top:0.25rem; color:var(--admin-muted);">Catatan: "${escapeHtml(o.notes)}"</p>` : ''}
+              </div>
+              <div class="record-controls">
+                <select data-order-status-id="${o.id}" style="padding:0.4rem 0.6rem; font-size:0.8rem; border:1px solid var(--admin-line); background:var(--admin-white);">
+                  <option value="baru" ${o.status === 'baru' ? 'selected' : ''}>Baru</option>
+                  <option value="diproses" ${o.status === 'diproses' ? 'selected' : ''}>Diproses</option>
+                  <option value="selesai" ${o.status === 'selesai' ? 'selected' : ''}>Selesai</option>
+                  <option value="dibatalkan" ${o.status === 'dibatalkan' ? 'selected' : ''}>Dibatalkan</option>
+                </select>
+                <button type="button" class="button button-danger" data-delete-order-id="${o.id}" style="padding:0.4rem 0.7rem; font-size:0.75rem;">Hapus</button>
+              </div>
+            </article>
+          `).join("");
+
+          // Bind status change
+          ordersContainer.querySelectorAll("[data-order-status-id]").forEach(select => {
+            select.addEventListener("change", async () => {
+              const orderId = select.dataset.orderStatusId;
+              const newStatus = select.value;
+              try {
+                select.disabled = true;
+                await window.MaisBatikDB.updateOrderStatus(orderId, newStatus, authKey);
+                showNotice(`Status pesanan #${orderId} diubah menjadi "${newStatus}".`, "success");
+                const item = cachedOrders.find(o => String(o.id) === String(orderId));
+                if (item) item.status = newStatus;
+                renderOrders();
+              } catch (e) {
+                showNotice(e.message, "error");
+                select.disabled = false;
+              }
+            });
+          });
+
+          // Bind delete order
+          ordersContainer.querySelectorAll("[data-delete-order-id]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+              const orderId = btn.dataset.deleteOrderId;
+              if (!confirm(`Hapus data pesanan #${orderId}? Tindakan ini permanen.`)) return;
+              try {
+                btn.disabled = true;
+                await window.MaisBatikDB.deleteOrder(orderId, authKey);
+                showNotice(`Pesanan #${orderId} berhasil dihapus.`, "success");
+                cachedOrders = cachedOrders.filter(o => String(o.id) !== String(orderId));
+                ordersBadge.textContent = cachedOrders.length;
+                renderOrders();
+              } catch (e) {
+                showNotice(e.message, "error");
+                btn.disabled = false;
+              }
+            });
+          });
+        };
 
         const updateSettingsInputs = () => {
           const c = window.MaisBatikDB?.getConfig() || {};
+          const sbUrlInput = document.getElementById("sb-url-input");
+          const sbKeyInput = document.getElementById("sb-key-input");
+          const sbAdminKeyInput = document.getElementById("sb-admin-key-input");
           if (sbUrlInput && c.url && !c.url.includes("GANTI_DENGAN")) sbUrlInput.value = c.url;
           if (sbKeyInput && c.anonKey && !c.anonKey.includes("GANTI_DENGAN")) sbKeyInput.value = c.anonKey;
+          if (sbAdminKeyInput && c.adminKey) sbAdminKeyInput.value = c.adminKey;
         };
 
-        const handleSaveSupabaseConfig = (url, key) => {
-          if (!url || !key) {
-            showNotice("URL dan Key wajib diisi.", "error");
-            return false;
-          }
-          window.MaisBatikDB?.saveConfig(url, key);
-          showNotice("Koneksi Supabase berhasil disimpan! Memuat data...", "success");
-          updateSettingsInputs();
+        document.getElementById("supabase-settings-form")?.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const url = document.getElementById("sb-url-input").value.trim();
+          const key = document.getElementById("sb-key-input").value.trim();
+          const adminKey = document.getElementById("sb-admin-key-input")?.value?.trim() || "";
+          window.MaisBatikDB?.saveConfig(url, key, adminKey);
+          showNotice("Konfigurasi Supabase berhasil disimpan di browser!", "success");
           const authKey = sessionStorage.getItem("mais_batik_admin_auth") || "admin123";
           loadAllData(authKey);
-          return true;
-        };
+        });
 
-        sbSettingsForm?.addEventListener("submit", (e) => {
+        // Form Tambah Produk
+        document.getElementById("create-product-form")?.addEventListener("submit", async (e) => {
           e.preventDefault();
-          handleSaveSupabaseConfig(sbUrlInput.value.trim(), sbKeyInput.value.trim());
+          const f = e.target;
+          const btn = document.getElementById("save-product-btn");
+          const authKey = sessionStorage.getItem("mais_batik_admin_auth") || "admin123";
+
+          btn.disabled = true;
+          btn.textContent = "Menyimpan ke Supabase...";
+
+          try {
+            await window.MaisBatikDB.createProduct({
+              name: f.name.value.trim(),
+              category_id: f.category_id.value,
+              variant: f.variant.value.trim(),
+              image_path: f.image_path.value,
+              price_min: f.price_min.value,
+              price_max: f.price_max.value,
+              stock: f.stock.value,
+              status: f.status.value
+            }, authKey);
+
+            showNotice(`Produk "${f.name.value}" berhasil ditambahkan ke katalog!`, "success");
+            f.reset();
+            loadAllData(authKey);
+            document.querySelector('[data-tab=products]').click();
+          } catch (err) {
+            showNotice(err.message || "Gagal menyimpan produk.", "error");
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "Simpan Produk ke Supabase";
+          }
         });
 
         const loadAllData = async (authKey) => {
           updateSettingsInputs();
 
-          if (!window.MaisBatikDB?.isConfigured()) {
-            const setupHtml = `
-              <div style="background:var(--paper); padding:1.5rem; border:1px solid var(--line); border-radius:4px; max-width:650px;">
-                <p class="eyebrow" style="color:#b85b35;">Koneksi Belum Terhubung</p>
-                <h3 style="margin-bottom:0.4rem;">Hubungkan ke Database Supabase Anda</h3>
-                <p style="font-size:0.88rem; color:var(--ink-soft); line-height:1.6; margin-bottom:1rem;">
-                  Database di Supabase sudah siap! Sekarang cukup salin <strong>Project URL</strong> dan <strong>anon key</strong> dari dashboard Supabase (<a href="https://supabase.com/dashboard" target="_blank" style="text-decoration:underline;">supabase.com</a> &rarr; <em>Project Settings</em> &rarr; <em>API</em>) lalu tempelkan di bawah:
-                </p>
-                <form id="inline-sb-form" class="form-grid" style="display:flex; flex-direction:column; gap:0.75rem;">
-                  <label>Project URL
-                    <input type="url" id="inline-sb-url" required placeholder="https://xxxxxxxxxxxx.supabase.co" style="padding:0.6rem; border:1px solid var(--line); border-radius:4px;">
-                  </label>
-                  <label>API Key (anon / public key)
-                    <textarea id="inline-sb-key" rows="3" required placeholder="eyJhbGciOi..." style="padding:0.6rem; border:1px solid var(--line); border-radius:4px; font-family:monospace; font-size:0.8rem;"></textarea>
-                  </label>
-                  <button class="button button-primary" type="submit" style="align-self:flex-start;">Simpan & Sambungkan Database</button>
-                </form>
-              </div>
-            `;
-            ordersContainer.innerHTML = setupHtml;
-            productsContainer.innerHTML = setupHtml;
-            categoriesContainer.innerHTML = setupHtml;
+          // Load Categories
+          window.MaisBatikDB.getCategories()
+            .then((categories) => {
+              categoriesBadge.textContent = categories.length;
+              if (categories.length === 0) {
+                categoriesContainer.innerHTML = '<div class="empty-state"><p>Belum ada kategori.</p></div>';
+              } else {
+                categoriesContainer.innerHTML = categories.map(c => `
+                  <article class="record-card category-record">
+                    <div class="record-summary">
+                      <span class="record-meta">ID: #${c.id} · Slug: <code>${escapeHtml(c.slug)}</code></span>
+                      <h3>${escapeHtml(c.name)}</h3>
+                    </div>
+                  </article>
+                `).join("");
 
-            document.querySelectorAll("#inline-sb-form").forEach(f => {
-              f.addEventListener("submit", (e) => {
+                if (categorySelect) {
+                  categorySelect.innerHTML = '<option value="">Pilih kategori...</option>' +
+                    categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+                }
+              }
+            })
+            .catch((err) => {
+              categoriesContainer.innerHTML = `<div class="empty-state"><p style="color:var(--admin-red);">Gagal memuat kategori: ${escapeHtml(err.message)}</p></div>`;
+            });
+
+          // Load Products
+          window.MaisBatikDB.getProducts()
+            .then((products) => {
+              productsBadge.textContent = products.length;
+              if (products.length === 0) {
+                productsContainer.innerHTML = '<div class="empty-state"><p>Belum ada produk di katalog.</p></div>';
+              } else {
+                productsContainer.innerHTML = products.map(p => `
+                  <article class="record-card">
+                    <img class="record-image" src="../${p.image_path || 'assets/images/placeholder.jpg'}" alt="${escapeHtml(p.name)}" width="72" height="72" onerror="this.src='https://placehold.co/72x72/eeece5/29463c?text=Batik'">
+                    <div class="record-summary">
+                      <span class="record-meta">${escapeHtml(p.category_name)} · Varian: ${escapeHtml(p.variant)}</span>
+                      <h3>${escapeHtml(p.name)}</h3>
+                      <p>Rp${new Intl.NumberFormat('id-ID').format(p.price_min)} – Rp${new Intl.NumberFormat('id-ID').format(p.price_max)} · Stok: <strong>${p.stock}</strong> · <span class="status-pill status-${p.status === 'active' ? 'selesai' : 'dibatalkan'}">${p.status === 'active' ? 'Aktif' : 'Nonaktif'}</span></p>
+                    </div>
+                    <div class="record-controls">
+                      <button type="button" class="button button-danger" data-delete-product-id="${p.id}" style="padding:0.4rem 0.7rem; font-size:0.75rem;">Hapus</button>
+                    </div>
+                  </article>
+                `).join("");
+
+                // Bind delete product
+                productsContainer.querySelectorAll("[data-delete-product-id]").forEach(btn => {
+                  btn.addEventListener("click", async () => {
+                    const prodId = btn.dataset.deleteProductId;
+                    if (!confirm(`Hapus produk #${prodId}? Produk akan dihapus dari katalog.`)) return;
+                    try {
+                      btn.disabled = true;
+                      await window.MaisBatikDB.deleteProduct(prodId, authKey);
+                      showNotice(`Produk #${prodId} berhasil dihapus.`, "success");
+                      loadAllData(authKey);
+                    } catch (e) {
+                      showNotice(e.message, "error");
+                      btn.disabled = false;
+                    }
+                  });
+                });
+              }
+            })
+            .catch((err) => {
+              productsContainer.innerHTML = `<div class="empty-state"><p style="color:var(--admin-red);">Gagal memuat produk: ${escapeHtml(err.message)}</p></div>`;
+            });
+
+          // Load Orders
+          window.MaisBatikDB.getOrders(authKey)
+            .then((orders) => {
+              cachedOrders = orders;
+              ordersBadge.textContent = orders.length;
+              renderOrders();
+            })
+            .catch((err) => {
+              ordersBadge.textContent = "!";
+              ordersContainer.innerHTML = `
+                <div class="sql-card">
+                  <span class="status-pill status-diproses">Izin Supabase Diperlukan</span>
+                  <h3 style="font-family:Georgia,serif; margin:0.4rem 0 0.5rem; font-size:1.25rem;">Akses Tabel Pesanan Dibatasi (RLS)</h3>
+                  <p style="color:var(--admin-muted); font-size:0.85rem; line-height:1.6; margin-bottom:0.75rem;">
+                    Supabase mengaktifkan Row Level Security (RLS) pada tabel <code>orders</code>. Untuk membuka akses penuh agar dapat dikelola langsung dari panel admin:
+                  </p>
+                  
+                  <div class="sql-snippet-box">
+                    <code>ALTER TABLE public.orders DISABLE ROW LEVEL SECURITY;</code>
+                    <button type="button" class="copy-btn" id="copy-rls-sql-btn">Salin SQL</button>
+                  </div>
+                  <p style="font-size:0.78rem; color:var(--admin-muted); margin-bottom:1rem;">
+                    Salin baris di atas, buka <a href="https://supabase.com/dashboard/project/avlnhinsnjmvzzhtjoqx/sql" target="_blank" style="text-decoration:underline; font-weight:bold;">Supabase SQL Editor</a>, tempelkan lalu klik <strong>Run</strong>.
+                  </p>
+
+                  <div style="border-top:1px dashed var(--admin-line); padding-top:0.75rem; margin-top:0.75rem;">
+                    <p style="font-size:0.8rem; font-weight:700; margin-bottom:0.35rem;">Atau masukkan Secret Key Supabase (sb_secret_...):</p>
+                    <form id="inline-secret-form" class="quick-secret-row">
+                      <input type="password" id="inline-secret-val" placeholder="sb_secret_..." required>
+                      <button type="submit" class="button button-primary" style="padding:0.45rem 0.85rem; font-size:0.8rem;">Simpan Kunci</button>
+                    </form>
+                  </div>
+                </div>
+              `;
+
+              document.getElementById("copy-rls-sql-btn")?.addEventListener("click", () => {
+                navigator.clipboard.writeText("ALTER TABLE public.orders DISABLE ROW LEVEL SECURITY;");
+                alert("Kode SQL berhasil disalin! Jalankan di Supabase SQL Editor.");
+              });
+
+              document.getElementById("inline-secret-form")?.addEventListener("submit", (e) => {
                 e.preventDefault();
-                const url = f.querySelector("#inline-sb-url")?.value?.trim();
-                const key = f.querySelector("#inline-sb-key")?.value?.trim();
-                handleSaveSupabaseConfig(url, key);
+                const key = document.getElementById("inline-secret-val").value.trim();
+                if (key) {
+                  window.MaisBatikDB?.saveConfig(undefined, undefined, key);
+                  showNotice("Secret key disimpan! Memuat ulang...", "success");
+                  loadAllData(key);
+                }
               });
             });
-            return;
-          }
-
-          try {
-            // Load orders
-            const orders = await window.MaisBatikDB.getOrders(authKey);
-            ordersBadge.textContent = orders.length;
-            if (orders.length === 0) {
-              ordersContainer.innerHTML = '<p style="padding:1rem; color:var(--ink-soft);">Belum ada pesanan masuk.</p>';
-            } else {
-              ordersContainer.innerHTML = orders.map(o => `
-                <article class="record-card order-record">
-                  <div class="order-mark">#${o.id}</div>
-                  <div>
-                    <span class="record-meta">${o.customer_name} · ${new Date(o.created_at).toLocaleString('id-ID')}</span>
-                    <h3>${o.product_name} <span class="status-pill status-${o.status}">${o.status}</span></h3>
-                    <p>Telp: <strong>${o.customer_phone}</strong> | Email: ${o.customer_email}</p>
-                    <p>Varian: ${o.variant} | ${o.quantity} pcs × Rp${new Intl.NumberFormat('id-ID').format(o.unit_price)}</p>
-                    ${o.notes ? `<p style="font-style:italic; font-size:0.85rem; color:var(--ink-soft);">Catatan: ${o.notes}</p>` : ''}
-                    <div style="display:flex; gap:0.5rem; margin-top:0.75rem; align-items:center;">
-                      <label style="font-size:0.8rem;">Ubah Status:</label>
-                      <select data-order-status-id="${o.id}" style="padding:0.25rem 0.5rem; font-size:0.82rem;">
-                        <option value="baru" ${o.status === 'baru' ? 'selected' : ''}>Baru</option>
-                        <option value="diproses" ${o.status === 'diproses' ? 'selected' : ''}>Diproses</option>
-                        <option value="selesai" ${o.status === 'selesai' ? 'selected' : ''}>Selesai</option>
-                        <option value="dibatalkan" ${o.status === 'dibatalkan' ? 'selected' : ''}>Dibatalkan</option>
-                      </select>
-                    </div>
-                  </div>
-                </article>
-              `).join("");
-
-              document.querySelectorAll("[data-order-status-id]").forEach(select => {
-                select.addEventListener("change", async () => {
-                  try {
-                    await window.MaisBatikDB.updateOrderStatus(select.dataset.orderStatusId, select.value, authKey);
-                    showNotice("Status pesanan berhasil diperbarui.", "success");
-                    loadAllData(authKey);
-                  } catch (e) {
-                    showNotice(e.message, "error");
-                  }
-                });
-              });
-            }
-
-            // Load products
-            const products = await window.MaisBatikDB.getProducts();
-            productsBadge.textContent = products.length;
-            productsContainer.innerHTML = products.map(p => `
-              <article class="record-card">
-                <div>
-                  <span class="record-meta">${p.category_name} · Stok: ${p.stock}</span>
-                  <h3>${p.name}</h3>
-                  <p>${p.variant}</p>
-                  <p>Rp${new Intl.NumberFormat('id-ID').format(p.price_min)} – Rp${new Intl.NumberFormat('id-ID').format(p.price_max)}</p>
-                </div>
-              </article>
-            `).join("");
-
-            // Load categories
-            const categories = await window.MaisBatikDB.getCategories();
-            categoriesContainer.innerHTML = categories.map(c => `
-              <article class="record-card">
-                <div>
-                  <span class="record-meta">Slug: ${c.slug}</span>
-                  <h3>${c.name}</h3>
-                </div>
-              </article>
-            `).join("");
-
-          } catch (err) {
-            showNotice("Gagal memuat data dari Supabase: " + err.message, "error");
-          }
         };
 
         document.getElementById("refresh-orders-btn")?.addEventListener("click", () => {
-          const authKey = sessionStorage.getItem("mais_batik_admin_auth");
-          if (authKey) loadAllData(authKey);
+          const authKey = sessionStorage.getItem("mais_batik_admin_auth") || "admin123";
+          loadAllData(authKey);
         });
 
         checkAuth();

@@ -65,42 +65,14 @@ CREATE TABLE IF NOT EXISTS public.sales_transaction_items (
 -- Supabase secara otomatis mengamankan tabel melalui RLS
 -- ==========================================================
 
-ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.sales_transactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.sales_transaction_items ENABLE ROW LEVEL SECURITY;
+-- Untuk aplikasi web dan dashboard admin berbasis JAMstack / Vercel,
+-- RLS dinonaktifkan agar pembaruan data dan pembacaan pesanan bekerja lancar.
 
--- Kebijakan Akses Kategori: Siapa saja boleh melihat
-CREATE POLICY "Public read categories" ON public.categories
-    FOR SELECT USING (true);
-
--- Kebijakan Akses Produk: Siapa saja boleh melihat produk aktif
-CREATE POLICY "Public read active products" ON public.products
-    FOR SELECT USING (status = 'active');
-
--- Kebijakan Akses Pesanan: Pelanggan publik boleh mengirim pesanan baru
-CREATE POLICY "Public insert orders" ON public.orders
-    FOR INSERT WITH CHECK (true);
-
--- Kebijakan Akses Pesanan: Admin atau authenticated user boleh mengelola pesanan
-CREATE POLICY "Full access orders for authenticated" ON public.orders
-    FOR ALL USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
-
--- Kebijakan Akses Produk: Admin boleh mengelola semua produk
-CREATE POLICY "Full access products for authenticated" ON public.products
-    FOR ALL USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
-
--- Kebijakan Akses Kategori: Admin boleh mengelola kategori
-CREATE POLICY "Full access categories for authenticated" ON public.categories
-    FOR ALL USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
-
--- Kebijakan Akses Transaksi POS:
-CREATE POLICY "Full access sales for authenticated" ON public.sales_transactions
-    FOR ALL USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
-
-CREATE POLICY "Full access sales items for authenticated" ON public.sales_transaction_items
-    FOR ALL USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
+ALTER TABLE public.categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.orders DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sales_transactions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sales_transaction_items DISABLE ROW LEVEL SECURITY;
 
 -- ==========================================================
 -- DATA AWAL (SEED DATA)

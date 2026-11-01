@@ -236,23 +236,40 @@ select {
   border-bottom: 1px solid var(--admin-line);
 }
 
-.admin-tabs a {
+.admin-tabs a,
+.admin-tabs button,
+.admin-tabs .tab-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  padding: 0 0.1rem 0.85rem;
+  padding: 0 0.2rem 0.85rem;
+  border: none;
   border-bottom: 2px solid transparent;
+  background: transparent;
   color: var(--admin-muted);
+  font-family: inherit;
   font-size: 0.82rem;
   font-weight: 700;
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
 }
 
-.admin-tabs a.active {
-  border-color: #a6533a;
+.admin-tabs a:hover,
+.admin-tabs button:hover,
+.admin-tabs .tab-btn:hover {
   color: var(--admin-green);
 }
 
-.admin-tabs a span {
+.admin-tabs a.active,
+.admin-tabs button.active,
+.admin-tabs .tab-btn.active {
+  border-bottom-color: #a6533a;
+  color: var(--admin-green);
+}
+
+.admin-tabs a span,
+.admin-tabs button span,
+.admin-tabs .tab-btn span {
   display: inline-grid;
   min-width: 22px;
   height: 22px;
@@ -261,6 +278,14 @@ select {
   background: #eeece5;
   color: var(--admin-muted);
   font-size: 0.66rem;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.admin-tabs a.active span,
+.admin-tabs button.active span,
+.admin-tabs .tab-btn.active span {
+  background: #a6533a;
+  color: white;
 }
 
 .section-title {
@@ -351,7 +376,8 @@ select {
   grid-column: 1 / -1;
 }
 
-.record-list {
+.record-list,
+.records-grid {
   display: grid;
   gap: 0.75rem;
 }
@@ -519,15 +545,35 @@ select {
   box-shadow: 0 15px 35px rgb(25 44 36 / 16%);
 }
 
+.record-card.order-record {
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+}
+
 .order-mark {
   display: grid;
   width: 56px;
   height: 56px;
   place-items: center;
+  border-radius: 4px;
   background: #eeece5;
   color: var(--admin-green);
   font-family: Georgia, "Times New Roman", serif;
   font-size: 0.9rem;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .record-card.order-record {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .order-mark {
+    width: auto;
+    height: 32px;
+    padding: 0 0.75rem;
+    display: inline-flex;
+    justify-self: start;
+  }
 }
 
 .status-pill {

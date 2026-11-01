@@ -164,12 +164,54 @@
 
     async deleteOrder(orderId, authKey) {
       if (!isConfigured()) throw new Error("Konfigurasi Supabase belum diatur.");
+      const headers = getHeaders(authKey);
+      headers["Prefer"] = "return=minimal";
       const res = await fetch(getEndpoint(`orders?id=eq.${orderId}`), {
         method: "DELETE",
-        headers: getHeaders(authKey)
+        headers
       });
       if (!res.ok) throw new Error("Gagal menghapus pesanan.");
       return true;
+    },
+
+    async createProduct(product, authKey) {
+      if (!isConfigured()) throw new Error("Konfigurasi Supabase belum diatur.");
+      const headers = getHeaders(authKey);
+      headers["Prefer"] = "return=minimal";
+      const res = await fetch(getEndpoint("products"), {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          name: product.name,
+          category_id: Number(product.category_id),
+          variant: product.variant || "",
+          image_path: product.image_path || "assets/images/placeholder.jpg",
+          price_min: Number(product.price_min) || 0,
+          price_max: Number(product.price_max) || Number(product.price_min) || 0,
+          stock: Number(product.stock) || 0,
+          status: product.status || "active"
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Gagal menyimpan produk ke Supabase.");
+      }
+      return { success: true };
+    },
+
+    async deleteProduct(productId, authKey) {
+      if (!isConfigured()) throw new Error("Konfigurasi Supabase belum diatur.");
+      const headers = getHeaders(authKey);
+      headers["Prefer"] = "return=minimal";
+      const res = await fetch(getEndpoint(`products?id=eq.${productId}`), {
+        method: "DELETE",
+        headers
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Gagal menghapus produk.");
+      }
+      return { success: true };
     }
   };
 })();
