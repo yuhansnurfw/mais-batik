@@ -14,9 +14,21 @@
     } catch (_) {}
 
     const winCfg = window.SUPABASE_CONFIG || {};
+
+    if (localUrl && !localUrl.startsWith("http")) {
+      try { localStorage.removeItem("mais_batik_supabase_url"); } catch (_) {}
+      localUrl = "";
+    }
+    if (localKey && !localKey.startsWith("sb_") && !localKey.startsWith("eyJ")) {
+      try { localStorage.removeItem("mais_batik_supabase_key"); } catch (_) {}
+      localKey = "";
+    }
+
     const effectiveUrl = (localUrl && !localUrl.includes("GANTI_DENGAN")) ? localUrl : (winCfg.url || "");
     const effectiveKey = (localKey && !localKey.includes("GANTI_DENGAN")) ? localKey : (winCfg.anonKey || "");
-    const effectiveAdmin = localAdmin || winCfg.adminKey || "";
+    const effectiveAdmin = (localAdmin && (localAdmin.startsWith("sb_") || localAdmin.startsWith("eyJ")))
+      ? localAdmin
+      : (winCfg.adminKey || "");
 
     return {
       url: effectiveUrl,
@@ -76,19 +88,20 @@
     saveConfig,
     getConfig: cfg,
 
-    async getCategories() {
+    async getCategories(authKey) {
       if (!isConfigured()) return [];
       const res = await fetch(getEndpoint("categories?select=*&order=id.asc"), {
-        headers: getHeaders()
+        headers: getHeaders(authKey)
       });
       if (!res.ok) throw new Error("Gagal mengambil kategori dari Supabase.");
       return await res.json();
     },
 
-    async getProducts() {
+    async getProducts(includeInactive = false, authKey) {
       if (!isConfigured()) return [];
-      const res = await fetch(getEndpoint("products?select=*,categories(name,slug)&status=eq.active&order=id.asc"), {
-        headers: getHeaders()
+      const filter = includeInactive ? "" : "&status=eq.active";
+      const res = await fetch(getEndpoint(`products?select=*,categories(name,slug)${filter}&order=id.asc`), {
+        headers: getHeaders(authKey)
       });
       if (!res.ok) throw new Error("Gagal mengambil produk dari Supabase.");
       const rows = await res.json();

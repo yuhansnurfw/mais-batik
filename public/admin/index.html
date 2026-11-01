@@ -529,7 +529,7 @@
           updateSettingsInputs();
 
           // Load Categories
-          window.MaisBatikDB.getCategories()
+          window.MaisBatikDB.getCategories(authKey)
             .then((categories) => {
               categoriesBadge.textContent = categories.length;
               if (categories.length === 0) {
@@ -555,7 +555,7 @@
             });
 
           // Load Products
-          window.MaisBatikDB.getProducts()
+          window.MaisBatikDB.getProducts(true, authKey)
             .then((products) => {
               productsBadge.textContent = products.length;
               if (products.length === 0) {
