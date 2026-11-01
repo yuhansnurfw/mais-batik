@@ -607,45 +607,11 @@
             .catch((err) => {
               ordersBadge.textContent = "!";
               ordersContainer.innerHTML = `
-                <div class="sql-card">
-                  <span class="status-pill status-diproses">Izin Supabase Diperlukan</span>
-                  <h3 style="font-family:Georgia,serif; margin:0.4rem 0 0.5rem; font-size:1.25rem;">Akses Tabel Pesanan Dibatasi (RLS)</h3>
-                  <p style="color:var(--admin-muted); font-size:0.85rem; line-height:1.6; margin-bottom:0.75rem;">
-                    Supabase mengaktifkan Row Level Security (RLS) pada tabel <code>orders</code>. Untuk membuka akses penuh agar dapat dikelola langsung dari panel admin:
-                  </p>
-                  
-                  <div class="sql-snippet-box">
-                    <code>ALTER TABLE public.orders DISABLE ROW LEVEL SECURITY;</code>
-                    <button type="button" class="copy-btn" id="copy-rls-sql-btn">Salin SQL</button>
-                  </div>
-                  <p style="font-size:0.78rem; color:var(--admin-muted); margin-bottom:1rem;">
-                    Salin baris di atas, buka <a href="https://supabase.com/dashboard/project/avlnhinsnjmvzzhtjoqx/sql" target="_blank" style="text-decoration:underline; font-weight:bold;">Supabase SQL Editor</a>, tempelkan lalu klik <strong>Run</strong>.
-                  </p>
-
-                  <div style="border-top:1px dashed var(--admin-line); padding-top:0.75rem; margin-top:0.75rem;">
-                    <p style="font-size:0.8rem; font-weight:700; margin-bottom:0.35rem;">Atau masukkan Secret Key Supabase (sb_secret_...):</p>
-                    <form id="inline-secret-form" class="quick-secret-row">
-                      <input type="password" id="inline-secret-val" placeholder="sb_secret_..." required>
-                      <button type="submit" class="button button-primary" style="padding:0.45rem 0.85rem; font-size:0.8rem;">Simpan Kunci</button>
-                    </form>
-                  </div>
+                <div class="empty-state">
+                  <p style="color:var(--admin-red); font-weight:bold;">Gagal memuat pesanan: ${escapeHtml(err.message)}</p>
+                  <p style="color:var(--admin-muted); font-size:0.8rem; margin-top:0.5rem;">Pastikan environment variable Vercel sudah terhubung dan kata sandi benar.</p>
                 </div>
               `;
-
-              document.getElementById("copy-rls-sql-btn")?.addEventListener("click", () => {
-                navigator.clipboard.writeText("ALTER TABLE public.orders DISABLE ROW LEVEL SECURITY;");
-                alert("Kode SQL berhasil disalin! Jalankan di Supabase SQL Editor.");
-              });
-
-              document.getElementById("inline-secret-form")?.addEventListener("submit", (e) => {
-                e.preventDefault();
-                const key = document.getElementById("inline-secret-val").value.trim();
-                if (key) {
-                  window.MaisBatikDB?.saveConfig(undefined, undefined, key);
-                  showNotice("Secret key disimpan! Memuat ulang...", "success");
-                  loadAllData(key);
-                }
-              });
             });
         };
 

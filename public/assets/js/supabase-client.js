@@ -83,27 +83,60 @@
     return `${base}/rest/v1/${path}`;
   };
 
+  const apiFetch = async (endpoint, options = {}) => {
+    try {
+      const res = await fetch(`/api/${endpoint}`, options);
+      if (res.ok) {
+        return { success: true, data: await res.json() };
+      }
+      const errData = await res.json().catch(() => ({}));
+      return { success: false, status: res.status, error: errData.error || errData.message };
+    } catch (_) {
+      return { success: false, networkError: true };
+    }
+  };
+
   window.MaisBatikDB = {
     isConfigured,
     saveConfig,
     getConfig: cfg,
 
     async getCategories(authKey) {
+      const apiRes = await apiFetch("categories");
+      if (apiRes.success && Array.isArray(apiRes.data)) return apiRes.data;
+
       if (!isConfigured()) return [];
       const res = await fetch(getEndpoint("categories?select=*&order=id.asc"), {
         headers: getHeaders(authKey)
       });
-      if (!res.ok) throw new Error("Gagal mengambil kategori dari Supabase.");
+      if (!res.ok) throw new Error(apiRes.error || "Gagal mengambil kategori.");
       return await res.json();
     },
 
     async getProducts(includeInactive = false, authKey) {
+      const apiRes = await apiFetch(`products?all=${includeInactive ? "1" : "0"}`);
+      if (apiRes.success && Array.isArray(apiRes.data)) {
+        return apiRes.data.map((p) => ({
+          id: p.id,
+          category_id: p.category_id,
+          category_name: p.category_name || p.categories?.name || "Batik",
+          category: p.category_slug || p.categories?.slug || "pria",
+          name: p.name,
+          variant: p.variant,
+          price_min: p.price_min,
+          price_max: p.price_max,
+          stock: p.stock,
+          image_path: p.image_path,
+          status: p.status
+        }));
+      }
+
       if (!isConfigured()) return [];
       const filter = includeInactive ? "" : "&status=eq.active";
       const res = await fetch(getEndpoint(`products?select=*,categories(name,slug)${filter}&order=id.asc`), {
         headers: getHeaders(authKey)
       });
-      if (!res.ok) throw new Error("Gagal mengambil produk dari Supabase.");
+      if (!res.ok) throw new Error(apiRes.error || "Gagal mengambil produk.");
       const rows = await res.json();
       return rows.map((p) => ({
         id: p.id,
@@ -121,7 +154,14 @@
     },
 
     async createOrder(order) {
-      if (!isConfigured()) throw new Error("Konfigurasi Supabase belum diatur.");
+      const apiRes = await apiFetch("orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(order)
+      });
+      if (apiRes.success) return apiRes.data;
+
+      if (!isConfigured()) throw new Error(apiRes.error || "Gagal menyimpan pesanan.");
       const headers = getHeaders();
       headers["Prefer"] = "return=minimal";
       const res = await fetch(getEndpoint("orders"), {
@@ -131,7 +171,7 @@
           product_id: order.product_id ? Number(order.product_id) : null,
           product_name: order.product_name,
           customer_name: order.customer_name,
-          customer_email: order.customer_email,
+          customer_email: order.customer_email || "-",
           customer_phone: order.customer_phone,
           variant: order.variant || "-",
           quantity: Number(order.quantity) || 1,
@@ -142,28 +182,39 @@
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Gagal menyimpan pesanan ke Supabase.");
+        throw new Error(err.message || apiRes.error || "Gagal menyimpan pesanan.");
       }
       return { success: true };
     },
 
     async getOrders(authKey) {
+      const apiRes = await apiFetch("orders", {
+        headers: { "x-admin-key": authKey || "admin123" }
+      });
+      if (apiRes.success && Array.isArray(apiRes.data)) return apiRes.data;
+
       if (!isConfigured()) return [];
       const res = await fetch(getEndpoint("orders?select=*&order=created_at.desc"), {
         headers: getHeaders(authKey)
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        if (res.status === 401 || res.status === 403) {
-          throw new Error("Akses ditolak. Masukkan Secret Key Supabase (sb_secret_...) di panel login.");
-        }
-        throw new Error(err.message || "Gagal mengambil pesanan.");
+        throw new Error(apiRes.error || "Gagal mengambil pesanan.");
       }
       return await res.json();
     },
 
     async updateOrderStatus(orderId, status, authKey) {
-      if (!isConfigured()) throw new Error("Konfigurasi Supabase belum diatur.");
+      const apiRes = await apiFetch("orders", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-key": authKey || "admin123"
+        },
+        body: JSON.stringify({ id: orderId, status })
+      });
+      if (apiRes.success) return { success: true };
+
+      if (!isConfigured()) throw new Error(apiRes.error || "Gagal memperbarui status.");
       const headers = getHeaders(authKey);
       headers["Prefer"] = "return=minimal";
       const res = await fetch(getEndpoint(`orders?id=eq.${orderId}`), {
@@ -171,59 +222,74 @@
         headers,
         body: JSON.stringify({ status, updated_at: new Date().toISOString() })
       });
-      if (!res.ok) throw new Error("Gagal memperbarui status pesanan.");
+      if (!res.ok) throw new Error(apiRes.error || "Gagal memperbarui status pesanan.");
       return { success: true };
     },
 
     async deleteOrder(orderId, authKey) {
-      if (!isConfigured()) throw new Error("Konfigurasi Supabase belum diatur.");
+      const apiRes = await apiFetch("orders", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-key": authKey || "admin123"
+        },
+        body: JSON.stringify({ id: orderId })
+      });
+      if (apiRes.success) return true;
+
+      if (!isConfigured()) throw new Error(apiRes.error || "Gagal menghapus pesanan.");
       const headers = getHeaders(authKey);
       headers["Prefer"] = "return=minimal";
       const res = await fetch(getEndpoint(`orders?id=eq.${orderId}`), {
         method: "DELETE",
         headers
       });
-      if (!res.ok) throw new Error("Gagal menghapus pesanan.");
+      if (!res.ok) throw new Error(apiRes.error || "Gagal menghapus pesanan.");
       return true;
     },
 
     async createProduct(product, authKey) {
-      if (!isConfigured()) throw new Error("Konfigurasi Supabase belum diatur.");
+      const apiRes = await apiFetch("products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-key": authKey || "admin123"
+        },
+        body: JSON.stringify(product)
+      });
+      if (apiRes.success) return { success: true };
+
+      if (!isConfigured()) throw new Error(apiRes.error || "Gagal menyimpan produk.");
       const headers = getHeaders(authKey);
       headers["Prefer"] = "return=minimal";
       const res = await fetch(getEndpoint("products"), {
         method: "POST",
         headers,
-        body: JSON.stringify({
-          name: product.name,
-          category_id: Number(product.category_id),
-          variant: product.variant || "",
-          image_path: product.image_path || "assets/images/placeholder.jpg",
-          price_min: Number(product.price_min) || 0,
-          price_max: Number(product.price_max) || Number(product.price_min) || 0,
-          stock: Number(product.stock) || 0,
-          status: product.status || "active"
-        })
+        body: JSON.stringify(product)
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Gagal menyimpan produk ke Supabase.");
-      }
+      if (!res.ok) throw new Error(apiRes.error || "Gagal menyimpan produk ke Supabase.");
       return { success: true };
     },
 
     async deleteProduct(productId, authKey) {
-      if (!isConfigured()) throw new Error("Konfigurasi Supabase belum diatur.");
+      const apiRes = await apiFetch("products", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-key": authKey || "admin123"
+        },
+        body: JSON.stringify({ id: productId })
+      });
+      if (apiRes.success) return { success: true };
+
+      if (!isConfigured()) throw new Error(apiRes.error || "Gagal menghapus produk.");
       const headers = getHeaders(authKey);
       headers["Prefer"] = "return=minimal";
       const res = await fetch(getEndpoint(`products?id=eq.${productId}`), {
         method: "DELETE",
         headers
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Gagal menghapus produk.");
-      }
+      if (!res.ok) throw new Error(apiRes.error || "Gagal menghapus produk.");
       return { success: true };
     }
   };
