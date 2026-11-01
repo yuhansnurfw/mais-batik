@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+$requiredEnvironmentVariable = static function (string $name): string {
+    $value = getenv($name);
+
+    if ($value === false || $value === '') {
+        throw new RuntimeException(sprintf('Environment variable %s must be set.', $name));
+    }
+
+    return $value;
+};
+
+$databasePassword = getenv('DB_PASSWORD');
+$databaseHost = $requiredEnvironmentVariable('DB_HOST');
+$databaseName = $requiredEnvironmentVariable('DB_NAME');
+$databasePort = filter_var(getenv('DB_PORT') ?: '3306', FILTER_VALIDATE_INT, [
+    'options' => ['min_range' => 1, 'max_range' => 65535],
+]);
+
+if (preg_match('/^[A-Za-z0-9._:-]+$/D', $databaseHost) !== 1) {
+    throw new RuntimeException('DB_HOST contains invalid characters.');
+}
+
+if (preg_match('/^[A-Za-z0-9_]+$/D', $databaseName) !== 1) {
+    throw new RuntimeException('DB_NAME contains invalid characters.');
+}
+
+if ($databasePort === false) {
+    throw new RuntimeException('DB_PORT must be a valid TCP port.');
+}
+
+return [
+    'driver' => 'mysql',
+    'host' => $databaseHost,
+    'port' => $databasePort,
+    'database' => $databaseName,
+    'username' => $requiredEnvironmentVariable('DB_USERNAME'),
+    'password' => $databasePassword === false ? '' : $databasePassword,
+    'charset' => 'utf8mb4',
+];

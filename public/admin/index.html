@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Panel Admin — Mais Batik (Supabase Cloud)</title>
+    <link rel="stylesheet" href="../assets/css/admin.css">
+    <script src="../assets/js/theme.js" defer></script>
+    <script src="../assets/js/supabase-config.js" defer></script>
+    <script src="../assets/js/supabase-client.js" defer></script>
+  </head>
+  <body>
+    <header class="admin-header">
+      <a class="admin-brand" href="../">Mais<span>Batik</span><small>ADMIN CLOUD</small></a>
+      <div class="admin-header-tools">
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Aktifkan mode gelap" aria-pressed="false" title="Aktifkan mode gelap">
+          <span class="theme-icon" aria-hidden="true">☾</span>
+        </button>
+        <button class="button button-quiet" type="button" id="admin-logout-btn" style="display:none;">Keluar</button>
+      </div>
+    </header>
+
+    <main class="admin-shell">
+      <div id="admin-notice" class="notice notice-info" style="display:none;" role="status"></div>
+
+      <!-- PANEL LOGIN ADMIN -->
+      <section class="login-panel" id="admin-login-section">
+        <p class="eyebrow">Area terbatas</p>
+        <h1>Masuk ke panel admin</h1>
+        <p>Akses manajemen data berbasis Supabase Cloud & Vercel.</p>
+        <form class="form-grid" id="admin-login-form">
+          <label>Kata Sandi Admin / Secret Key
+            <input type="password" id="admin-secret-input" required placeholder="Masukkan kata sandi admin...">
+          </label>
+          <button class="button button-primary" type="submit">Masuk ke Panel</button>
+        </form>
+        <p style="font-size:0.85rem; color:var(--ink-soft); margin-top:0.75rem;">
+          Default kata sandi lokal: <code>admin123</code> atau gunakan Service Role Key dari dashboard Supabase.
+        </p>
+        <a class="back-link" href="../">← Kembali ke storefront</a>
+      </section>
+
+      <!-- DASHBOARD ADMIN -->
+      <div id="admin-dashboard-section" style="display:none;">
+        <section class="dashboard-heading">
+          <div>
+            <p class="eyebrow">Mais Batik · Cloud Workspace</p>
+            <h1>Kelola data (Supabase)</h1>
+            <p>Atur katalog produk dan pantau pesanan pelanggan secara real-time.</p>
+          </div>
+          <a class="back-link" href="../">Lihat storefront <span aria-hidden="true">↗</span></a>
+        </section>
+
+        <nav class="admin-tabs" aria-label="Bagian pengelolaan">
+          <button class="tab-btn active" type="button" data-tab="orders">Pesanan <span id="orders-count-badge">0</span></button>
+          <button class="tab-btn" type="button" data-tab="products">Produk <span id="products-count-badge">0</span></button>
+          <button class="tab-btn" type="button" data-tab="categories">Kategori</button>
+        </nav>
+
+        <!-- TAB PESANAN -->
+        <section class="management-section tab-content" id="tab-orders">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Daftar Masuk</p>
+              <h2>Pesanan Pelanggan</h2>
+            </div>
+            <button class="button button-quiet" type="button" id="refresh-orders-btn">Segarkan Data ⟳</button>
+          </div>
+          <div class="records-grid" id="orders-list-container">
+            <p style="color:var(--ink-soft); padding:1rem;">Memuat daftar pesanan dari Supabase...</p>
+          </div>
+        </section>
+
+        <!-- TAB PRODUK -->
+        <section class="management-section tab-content" id="tab-products" style="display:none;">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Katalog</p>
+              <h2>Produk Tersedia</h2>
+            </div>
+          </div>
+          <div class="records-grid" id="products-list-container">
+            <p style="color:var(--ink-soft); padding:1rem;">Memuat produk dari Supabase...</p>
+          </div>
+        </section>
+
+        <!-- TAB KATEGORI -->
+        <section class="management-section tab-content" id="tab-categories" style="display:none;">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Taksonomi</p>
+              <h2>Kategori Batik</h2>
+            </div>
+          </div>
+          <div class="records-grid" id="categories-list-container">
+            <p style="color:var(--ink-soft); padding:1rem;">Memuat kategori...</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const loginSection = document.getElementById("admin-login-section");
+        const dashboardSection = document.getElementById("admin-dashboard-section");
+        const loginForm = document.getElementById("admin-login-form");
+        const secretInput = document.getElementById("admin-secret-input");
+        const logoutBtn = document.getElementById("admin-logout-btn");
+        const notice = document.getElementById("admin-notice");
+        const ordersContainer = document.getElementById("orders-list-container");
+        const productsContainer = document.getElementById("products-list-container");
+        const categoriesContainer = document.getElementById("categories-list-container");
+        const ordersBadge = document.getElementById("orders-count-badge");
+        const productsBadge = document.getElementById("products-count-badge");
+
+        const showNotice = (msg, type = "info") => {
+          notice.textContent = msg;
+          notice.className = `notice notice-${type}`;
+          notice.style.display = "block";
+          setTimeout(() => { notice.style.display = "none"; }, 5000);
+        };
+
+        const checkAuth = () => {
+          const authKey = sessionStorage.getItem("mais_batik_admin_auth");
+          if (authKey) {
+            loginSection.style.display = "none";
+            dashboardSection.style.display = "block";
+            logoutBtn.style.display = "inline-block";
+            loadAllData(authKey);
+          } else {
+            loginSection.style.display = "block";
+            dashboardSection.style.display = "none";
+            logoutBtn.style.display = "none";
+          }
+        };
+
+        loginForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const pass = secretInput.value.trim();
+          const configKey = window.SUPABASE_CONFIG?.adminKey || "admin123";
+          if (pass === "admin123" || pass === configKey || (pass.length > 20 && pass.startsWith("eyJ"))) {
+            sessionStorage.setItem("mais_batik_admin_auth", pass);
+            checkAuth();
+            showNotice("Berhasil masuk ke panel admin.", "success");
+          } else {
+            showNotice("Kata sandi salah. Gunakan admin123 atau Service Key Supabase.", "error");
+          }
+        });
+
+        logoutBtn.addEventListener("click", () => {
+          sessionStorage.removeItem("mais_batik_admin_auth");
+          checkAuth();
+        });
+
+        // Tab Switching
+        document.querySelectorAll(".admin-tabs .tab-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            document.querySelectorAll(".admin-tabs .tab-btn").forEach(b => b.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach(c => c.style.display = "none");
+            btn.classList.add("active");
+            const target = document.getElementById(`tab-${btn.dataset.tab}`);
+            if (target) target.style.display = "block";
+          });
+        });
+
+        const loadAllData = async (authKey) => {
+          if (!window.MaisBatikDB?.isConfigured()) {
+            ordersContainer.innerHTML = '<p style="color:#b85b35; padding:1rem;">Koneksi Supabase belum diatur di <code>assets/js/supabase-config.js</code>.</p>';
+            return;
+          }
+
+          try {
+            // Load orders
+            const orders = await window.MaisBatikDB.getOrders(authKey);
+            ordersBadge.textContent = orders.length;
+            if (orders.length === 0) {
+              ordersContainer.innerHTML = '<p style="padding:1rem; color:var(--ink-soft);">Belum ada pesanan masuk.</p>';
+            } else {
+              ordersContainer.innerHTML = orders.map(o => `
+                <article class="record-card order-record">
+                  <div class="order-mark">#${o.id}</div>
+                  <div>
+                    <span class="record-meta">${o.customer_name} · ${new Date(o.created_at).toLocaleString('id-ID')}</span>
+                    <h3>${o.product_name} <span class="status-pill status-${o.status}">${o.status}</span></h3>
+                    <p>Telp: <strong>${o.customer_phone}</strong> | Email: ${o.customer_email}</p>
+                    <p>Varian: ${o.variant} | ${o.quantity} pcs × Rp${new Intl.NumberFormat('id-ID').format(o.unit_price)}</p>
+                    ${o.notes ? `<p style="font-style:italic; font-size:0.85rem; color:var(--ink-soft);">Catatan: ${o.notes}</p>` : ''}
+                    <div style="display:flex; gap:0.5rem; margin-top:0.75rem; align-items:center;">
+                      <label style="font-size:0.8rem;">Ubah Status:</label>
+                      <select data-order-status-id="${o.id}" style="padding:0.25rem 0.5rem; font-size:0.82rem;">
+                        <option value="baru" ${o.status === 'baru' ? 'selected' : ''}>Baru</option>
+                        <option value="diproses" ${o.status === 'diproses' ? 'selected' : ''}>Diproses</option>
+                        <option value="selesai" ${o.status === 'selesai' ? 'selected' : ''}>Selesai</option>
+                        <option value="dibatalkan" ${o.status === 'dibatalkan' ? 'selected' : ''}>Dibatalkan</option>
+                      </select>
+                    </div>
+                  </div>
+                </article>
+              `).join("");
+
+              document.querySelectorAll("[data-order-status-id]").forEach(select => {
+                select.addEventListener("change", async () => {
+                  try {
+                    await window.MaisBatikDB.updateOrderStatus(select.dataset.orderStatusId, select.value, authKey);
+                    showNotice("Status pesanan berhasil diperbarui.", "success");
+                    loadAllData(authKey);
+                  } catch (e) {
+                    showNotice(e.message, "error");
+                  }
+                });
+              });
+            }
+
+            // Load products
+            const products = await window.MaisBatikDB.getProducts();
+            productsBadge.textContent = products.length;
+            productsContainer.innerHTML = products.map(p => `
+              <article class="record-card">
+                <div>
+                  <span class="record-meta">${p.category_name} · Stok: ${p.stock}</span>
+                  <h3>${p.name}</h3>
+                  <p>${p.variant}</p>
+                  <p>Rp${new Intl.NumberFormat('id-ID').format(p.price_min)} – Rp${new Intl.NumberFormat('id-ID').format(p.price_max)}</p>
+                </div>
+              </article>
+            `).join("");
+
+            // Load categories
+            const categories = await window.MaisBatikDB.getCategories();
+            categoriesContainer.innerHTML = categories.map(c => `
+              <article class="record-card">
+                <div>
+                  <span class="record-meta">Slug: ${c.slug}</span>
+                  <h3>${c.name}</h3>
+                </div>
+              </article>
+            `).join("");
+
+          } catch (err) {
+            showNotice("Gagal memuat data dari Supabase: " + err.message, "error");
+          }
+        };
+
+        document.getElementById("refresh-orders-btn")?.addEventListener("click", () => {
+          const authKey = sessionStorage.getItem("mais_batik_admin_auth");
+          if (authKey) loadAllData(authKey);
+        });
+
+        checkAuth();
+      });
+    </script>
+  </body>
+</html>

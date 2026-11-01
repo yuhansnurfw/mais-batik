@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Lihat katalog produk batik Mais Batik yang tersedia.">
+    <meta name="theme-color" content="#f8f5ed">
+    <title>Katalog Produk — Mais Batik</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="assets/js/theme.js" defer></script>
+    <script src="assets/js/supabase-config.js" defer></script>
+    <script src="assets/js/supabase-client.js" defer></script>
+    <script src="assets/js/main.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#konten-utama">Lewati ke konten utama</a>
+    <header class="site-header" id="home">
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="Mais Batik, ke halaman utama">
+          <span class="brand-mark" aria-hidden="true">M</span>
+          <span class="brand-name">mais<span>batik</span></span>
+        </a>
+        <nav class="primary-navigation" id="primary-navigation" aria-label="Navigasi utama">
+          <a class="nav-link" href="index.html#home">Home</a>
+          <a class="nav-link" href="katalog.html" aria-current="page">Katalog</a>
+          <a class="nav-link" href="index.html#order">Order</a>
+          <a class="nav-link" href="index.html#booking">Booking</a>
+          <a class="nav-link nav-system" href="admin/index.html">POS</a>
+          <a class="nav-login" href="admin/index.html">Login Admin <span aria-hidden="true">↗</span></a>
+        </nav>
+        <div class="header-tools">
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Aktifkan mode gelap" aria-pressed="false" title="Aktifkan mode gelap">
+            <span class="theme-icon" aria-hidden="true">☾</span>
+          </button>
+          <button class="menu-toggle" type="button" aria-label="Buka navigasi" aria-expanded="false" aria-controls="primary-navigation">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="konten-utama">
+      <section class="catalog section-shell" id="katalog" aria-labelledby="catalog-title">
+        <div class="catalog-heading">
+          <div>
+            <p class="eyebrow"><span></span> Koleksi Mais Batik</p>
+            <h1 id="catalog-title">Temukan batik <em>favoritmu.</em></h1>
+            <p class="catalog-description">Pilihan batik untuk menemani hari istimewa maupun keseharian.</p>
+          </div>
+          <span class="catalog-note" id="catalog-db-status">Katalog Koleksi<br><strong>Mais Batik</strong></span>
+        </div>
+
+        <div class="catalog-tools" aria-label="Filter katalog produk">
+          <label class="search-field">
+            <span class="visually-hidden">Cari nama produk</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.8" cy="10.8" r="6.8"></circle>
+              <path d="m16 16 4.5 4.5"></path>
+            </svg>
+            <input id="product-search" type="search" placeholder="Cari produk..." autocomplete="off">
+          </label>
+          <label class="category-field">
+            <span>Kategori</span>
+            <select id="category-filter" aria-label="Filter berdasarkan kategori">
+              <option value="semua">Semua kategori</option>
+              <option value="pria">Batik pria</option>
+              <option value="anak">Batik anak</option>
+              <option value="wanita">Batik wanita</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="catalog-summary">
+          <p id="product-count" aria-live="polite">Menampilkan produk</p>
+          <p>Stok dan harga terhubung langsung.</p>
+        </div>
+
+        <div class="product-grid" id="product-grid">
+          <article class="product-card" data-category="pria" data-search="baju koko bordir putih">
+            <div class="product-image">
+              <img src="assets/images/products/baju-koko.jpg" alt="Baju Koko Bordir Putih" width="640" height="720" loading="lazy">
+              <span class="product-category">Batik pria</span>
+              <span class="stock-badge"><span aria-hidden="true"></span> Stok tersedia · 15</span>
+            </div>
+            <div class="product-info">
+              <p class="product-variant">Bordir putih · ukuran M–XXL</p>
+              <h3>Baju Koko Bordir Putih</h3>
+              <p class="product-price">Rp185.000 <span>– Rp235.000</span></p>
+              <div class="product-actions">
+                <button class="product-order" type="button" data-order-trigger data-product-id="1" data-product-name="Baju Koko Bordir Putih" data-variant="Bordir putih · ukuran M–XXL" data-price="185000" data-stock="15">Pesan <span aria-hidden="true">→</span></button>
+                <button class="product-detail" type="button" data-product="Baju Koko Bordir Putih" data-description="Baju koko putih dengan detail bordir. Ukuran M hingga XXL.">Detail</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product-card" data-category="anak" data-search="sarung instan anak hitam">
+            <div class="product-image product-image-child">
+              <img src="assets/images/products/sarun-instan-anak.jpg" alt="Sarung Instan Anak Hitam" width="640" height="720" loading="lazy">
+              <span class="product-category">Batik anak</span>
+              <span class="stock-badge"><span aria-hidden="true"></span> Stok tersedia · 20</span>
+            </div>
+            <div class="product-info">
+              <p class="product-variant">Warna hitam · usia 4–12 tahun</p>
+              <h3>Sarung Instan Anak Hitam</h3>
+              <p class="product-price">Rp75.000 <span>– Rp95.000</span></p>
+              <div class="product-actions">
+                <button class="product-order" type="button" data-order-trigger data-product-id="2" data-product-name="Sarung Instan Anak Hitam" data-variant="Warna hitam · usia 4–12 tahun" data-price="75000" data-stock="20">Pesan <span aria-hidden="true">→</span></button>
+                <button class="product-detail" type="button" data-product="Sarung Instan Anak Hitam" data-description="Sarung instan anak berwarna hitam, praktis untuk dikenakan. Usia 4–12 tahun.">Detail</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product-card" data-category="wanita" data-search="blouse batik motif parang hitam">
+            <div class="product-image product-image-woman">
+              <img src="assets/images/products/blouse-motif-parang.jpg" alt="Blouse Batik Motif Parang Hitam" width="640" height="720" loading="lazy">
+              <span class="product-category">Batik wanita</span>
+              <span class="stock-badge"><span aria-hidden="true"></span> Stok tersedia · 10</span>
+            </div>
+            <div class="product-info">
+              <p class="product-variant">Motif parang hitam · ukuran S–XXL</p>
+              <h3>Blouse Batik Motif Parang Hitam</h3>
+              <p class="product-price">Rp165.000 <span>– Rp225.000</span></p>
+              <div class="product-actions">
+                <button class="product-order" type="button" data-order-trigger data-product-id="3" data-product-name="Blouse Batik Motif Parang Hitam" data-variant="Motif parang hitam · ukuran S–XXL" data-price="165000" data-stock="10">Pesan <span aria-hidden="true">→</span></button>
+                <button class="product-detail" type="button" data-product="Blouse Batik Motif Parang Hitam" data-description="Blouse batik wanita dengan motif parang berwarna hitam. Ukuran S hingga XXL.">Detail</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product-card" data-category="pria" data-search="sarung batik dewasa krem">
+            <div class="product-image">
+              <img src="assets/images/products/sarung-batik-dewasa.jpg" alt="Sarung Batik Dewasa Krem" width="640" height="720" loading="lazy">
+              <span class="product-category">Batik dewasa</span>
+              <span class="stock-badge stock-limited"><span aria-hidden="true"></span> Stok terbatas · 5</span>
+            </div>
+            <div class="product-info">
+              <p class="product-variant">Warna krem · ukuran dewasa</p>
+              <h3>Sarung Batik Dewasa Krem</h3>
+              <p class="product-price">Rp179.000 <span>– Rp249.000</span></p>
+              <div class="product-actions">
+                <button class="product-order" type="button" data-order-trigger data-product-id="4" data-product-name="Sarung Batik Dewasa Krem" data-variant="Warna krem · ukuran dewasa" data-price="179000" data-stock="5">Pesan <span aria-hidden="true">→</span></button>
+                <button class="product-detail" type="button" data-product="Sarung Batik Dewasa Krem" data-description="Sarung batik untuk dewasa dengan warna krem.">Detail</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product-card" data-category="wanita" data-search="blouse batik bunga alena maroon">
+            <div class="product-image product-image-woman-alt">
+              <img src="assets/images/products/blose-motif-bunga-alena.jpg" alt="Blouse Batik Bunga Alena Maroon" width="640" height="720" loading="lazy">
+              <span class="product-category">Batik wanita</span>
+              <span class="stock-badge stock-limited"><span aria-hidden="true"></span> Stok terbatas · 8</span>
+            </div>
+            <div class="product-info">
+              <p class="product-variant">Motif bunga Alena · warna maroon</p>
+              <h3>Blouse Batik Bunga Alena Maroon</h3>
+              <p class="product-price">Rp179.000 <span>– Rp249.000</span></p>
+              <div class="product-actions">
+                <button class="product-order" type="button" data-order-trigger data-product-id="5" data-product-name="Blouse Batik Bunga Alena Maroon" data-variant="Motif bunga Alena · warna maroon" data-price="179000" data-stock="8">Pesan <span aria-hidden="true">→</span></button>
+                <button class="product-detail" type="button" data-product="Blouse Batik Bunga Alena Maroon" data-description="Blouse batik dengan motif bunga Alena berwarna maroon.">Detail</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <p class="catalog-empty" id="catalog-empty" hidden>Produk tidak ditemukan. Coba kata kunci atau kategori lain.</p>
+      </section>
+    </main>
+
+    <dialog class="product-dialog" id="product-dialog" aria-labelledby="dialog-title">
+      <form method="dialog"><button class="dialog-close" type="submit" aria-label="Tutup detail">×</button></form>
+      <p class="eyebrow"><span></span> Detail produk</p>
+      <h2 id="dialog-title"></h2>
+      <p id="dialog-description"></p>
+      <button class="button button-primary" id="dialog-order" type="button">Pesan Produk <span aria-hidden="true">→</span></button>
+    </dialog>
+
+    <dialog class="order-dialog" id="order-dialog" aria-labelledby="order-dialog-title">
+      <form method="dialog" class="dialog-close-form">
+        <button class="dialog-close" type="submit" aria-label="Tutup formulir">×</button>
+      </form>
+      <p class="eyebrow"><span></span> Formulir Pesanan</p>
+      <h2 id="order-dialog-title">Pesan Batik</h2>
+      <p class="order-product-info" id="order-product-info"></p>
+      <div id="order-alert" class="order-alert" hidden></div>
+      <form action="pesan.php" method="post" id="order-form" class="order-form-grid">
+        <input type="hidden" name="product_id" id="order-product-id">
+        <label>Nama Lengkap
+          <input type="text" name="customer_name" required minlength="2" maxlength="120" placeholder="Nama Anda">
+        </label>
+        <label>Nomor WhatsApp / HP
+          <input type="tel" name="customer_phone" required minlength="8" maxlength="24" placeholder="08xxxxxxxxxx">
+        </label>
+        <label>Email
+          <input type="email" name="customer_email" required maxlength="254" placeholder="email@contoh.com">
+        </label>
+        <label>Varian / Ukuran
+          <input type="text" name="order_variant" id="order-variant-input" required maxlength="160">
+        </label>
+        <label>Jumlah (pcs)
+          <input type="number" name="quantity" id="order-qty-input" value="1" min="1" max="1000" required>
+        </label>
+        <div class="full-width order-summary-box" id="order-subtotal">Estimasi Total: Rp0 (1 pcs)</div>
+        <label class="full-width">Catatan Pesanan (opsional)
+          <textarea name="notes" maxlength="500" rows="3" placeholder="Alamat pengiriman atau permintaan khusus..."></textarea>
+        </label>
+        <button class="button button-primary full-width" type="submit" id="order-submit-btn">Kirim Pesanan <span aria-hidden="true">→</span></button>
+      </form>
+    </dialog>
+
+    <footer class="site-footer">
+      <div class="footer-main">
+        <div class="footer-brand">
+          <a class="brand brand-footer" href="index.html#home" aria-label="Mais Batik, kembali ke halaman utama">
+            <span class="brand-mark" aria-hidden="true">M</span>
+            <span class="brand-name">mais<span>batik</span></span>
+          </a>
+          <p>Merawat cerita, merayakan budaya.</p>
+        </div>
+        <div class="footer-links">
+          <p class="footer-label">Jelajahi</p>
+          <a href="katalog.html">Katalog</a>
+          <a href="index.html#order">Order</a>
+          <a href="index.html#booking">Booking</a>
+        </div>
+        <div class="footer-links">
+          <p class="footer-label">Hubungi kami</p>
+          <a href="mailto:info@maisbatik.example">info@maisbatik.example</a>
+        </div>
+        <a class="back-to-top" href="#home">Kembali ke atas <span aria-hidden="true">↑</span></a>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="current-year">2026</span> Mais Batik</span>
+        <span>Dibuat dengan rasa dan cerita.</span>
+      </div>
+    </footer>
+  </body>
+</html>
