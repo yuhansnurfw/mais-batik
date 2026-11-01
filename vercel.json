@@ -1,5 +1,13 @@
 {
-  "version": 2,
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
-  "outputDirectory": "public"
+  "rewrites": [
+    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/katalog", "destination": "/public/katalog.html" },
+    { "source": "/katalog.html", "destination": "/public/katalog.html" },
+    { "source": "/admin", "destination": "/public/admin/index.html" },
+    { "source": "/admin/", "destination": "/public/admin/index.html" },
+    { "source": "/admin/index.html", "destination": "/public/admin/index.html" },
+    { "source": "/(.*)", "destination": "/public/$1" }
+  ]
 }

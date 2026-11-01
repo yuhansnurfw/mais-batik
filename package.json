@@ -1,0 +1,9 @@
+{
+  "name": "mais-batik",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistem Informasi Bisnis Batik Terpadu Mais Batik",
+  "scripts": {
+    "build": "echo 'Static build ready'"
+  }
+}
