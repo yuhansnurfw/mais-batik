@@ -52,9 +52,13 @@
 
   const getHeaders = (customToken) => {
     const c = cfg();
-    const token = customToken || c.anonKey;
+    let token = customToken;
+    if (!token || token === "admin123") {
+      token = c.adminKey || c.anonKey;
+    }
+    const isServiceKey = Boolean(token && (token.startsWith("sb_secret_") || token.length > 50));
     return {
-      "apikey": c.anonKey,
+      "apikey": isServiceKey ? token : c.anonKey,
       "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json",
       "Prefer": "return=representation"
@@ -105,16 +109,18 @@
 
     async createOrder(order) {
       if (!isConfigured()) throw new Error("Konfigurasi Supabase belum diatur.");
+      const headers = getHeaders();
+      headers["Prefer"] = "return=minimal";
       const res = await fetch(getEndpoint("orders"), {
         method: "POST",
-        headers: getHeaders(),
+        headers,
         body: JSON.stringify({
           product_id: order.product_id ? Number(order.product_id) : null,
           product_name: order.product_name,
           customer_name: order.customer_name,
           customer_email: order.customer_email,
           customer_phone: order.customer_phone,
-          variant: order.variant || "",
+          variant: order.variant || "-",
           quantity: Number(order.quantity) || 1,
           unit_price: Number(order.unit_price) || 0,
           status: "baru",
@@ -125,7 +131,7 @@
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || "Gagal menyimpan pesanan ke Supabase.");
       }
-      return await res.json();
+      return { success: true };
     },
 
     async getOrders(authKey) {
@@ -133,19 +139,27 @@
       const res = await fetch(getEndpoint("orders?select=*&order=created_at.desc"), {
         headers: getHeaders(authKey)
       });
-      if (!res.ok) throw new Error("Gagal mengambil pesanan.");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        if (res.status === 401 || res.status === 403) {
+          throw new Error("Akses ditolak. Masukkan Secret Key Supabase (sb_secret_...) di panel login.");
+        }
+        throw new Error(err.message || "Gagal mengambil pesanan.");
+      }
       return await res.json();
     },
 
     async updateOrderStatus(orderId, status, authKey) {
       if (!isConfigured()) throw new Error("Konfigurasi Supabase belum diatur.");
+      const headers = getHeaders(authKey);
+      headers["Prefer"] = "return=minimal";
       const res = await fetch(getEndpoint(`orders?id=eq.${orderId}`), {
         method: "PATCH",
-        headers: getHeaders(authKey),
+        headers,
         body: JSON.stringify({ status, updated_at: new Date().toISOString() })
       });
       if (!res.ok) throw new Error("Gagal memperbarui status pesanan.");
-      return await res.json();
+      return { success: true };
     },
 
     async deleteOrder(orderId, authKey) {

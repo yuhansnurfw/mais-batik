@@ -162,12 +162,16 @@
           e.preventDefault();
           const pass = secretInput.value.trim();
           const configKey = window.SUPABASE_CONFIG?.adminKey || "admin123";
-          if (pass === "admin123" || pass === configKey || (pass.length > 20 && pass.startsWith("eyJ"))) {
+          const isSecret = pass.startsWith("sb_secret_") || (pass.length > 20 && pass.startsWith("eyJ"));
+          if (pass === "admin123" || pass === configKey || isSecret) {
             sessionStorage.setItem("mais_batik_admin_auth", pass);
+            if (isSecret) {
+              window.MaisBatikDB?.saveConfig(undefined, undefined, pass);
+            }
             checkAuth();
             showNotice("Berhasil masuk ke panel admin.", "success");
           } else {
-            showNotice("Kata sandi salah. Gunakan admin123 atau Service Key Supabase.", "error");
+            showNotice("Kata sandi salah. Gunakan Secret Key Supabase (sb_secret_...) atau admin123.", "error");
           }
         });
 
