@@ -2,11 +2,5 @@
   "name": "mais-batik",
   "version": "1.0.0",
   "private": true,
-  "description": "Sistem Informasi Bisnis Batik Terpadu Mais Batik",
-  "scripts": {
-    "build": "echo 'Build ready'"
-  },
-  "dependencies": {
-    "pg": "^8.13.1"
-  }
+  "description": "Sistem Informasi Bisnis Batik Terpadu Mais Batik"
 }

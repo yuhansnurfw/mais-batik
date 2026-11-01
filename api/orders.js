@@ -1,5 +1,5 @@
 // api/orders.js - Handler Pesanan untuk Vercel Serverless
-const { query } = require("./db");
+const { supabaseFetch } = require("./db");
 
 function checkAdmin(req) {
   const authKey = req.headers["x-admin-key"] || req.query.key;
@@ -23,30 +23,11 @@ module.exports = async (req, res) => {
         return res.status(401).json({ error: "Akses ditolak. Kata sandi admin diperlukan." });
       }
 
-      // Coba lewat direct Postgres pool (Vercel POSTGRES_URL)
-      const rows = await query("SELECT * FROM public.orders ORDER BY created_at DESC");
-      if (rows !== null) {
-        return res.status(200).json(rows);
-      }
-
-      // Fallback via Supabase REST API
-      const sbUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").replace(/\/+$/, "");
-      const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-      if (!sbUrl || !sbKey) {
-        return res.status(500).json({ error: "Environment variable Supabase belum disetel di Vercel." });
-      }
-
-      const restRes = await fetch(`${sbUrl}/rest/v1/orders?select=*&order=created_at.desc`, {
-        headers: {
-          apikey: sbKey,
-          Authorization: `Bearer ${sbKey}`
-        }
-      });
-      const data = await restRes.json();
-      return res.status(restRes.status).json(data);
+      const data = await supabaseFetch("orders?select=*&order=created_at.desc");
+      return res.status(200).json(data);
     }
 
-    // 2. POST: Tambah pesanan baru (publik dari storefront)
+    // 2. POST: Buat pesanan baru (publik dari storefront)
     if (req.method === "POST") {
       const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
       const {
@@ -65,39 +46,9 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: "Nama dan nomor telepon pelanggan wajib diisi." });
       }
 
-      const rows = await query(
-        `INSERT INTO public.orders 
-         (product_id, product_name, customer_name, customer_email, customer_phone, variant, quantity, unit_price, status, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'baru', $9)
-         RETURNING *`,
-        [
-          product_id ? Number(product_id) : null,
-          product_name || "Batik",
-          customer_name,
-          customer_email || "-",
-          customer_phone,
-          variant || "-",
-          Number(quantity) || 1,
-          Number(unit_price) || 0,
-          notes || ""
-        ]
-      );
-
-      if (rows !== null) {
-        return res.status(201).json({ success: true, order: rows[0] });
-      }
-
-      // Fallback via Supabase REST API
-      const sbUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").replace(/\/+$/, "");
-      const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-      const restRes = await fetch(`${sbUrl}/rest/v1/orders`, {
+      await supabaseFetch("orders", {
         method: "POST",
-        headers: {
-          apikey: sbKey,
-          Authorization: `Bearer ${sbKey}`,
-          "Content-Type": "application/json",
-          Prefer: "return=minimal"
-        },
+        headers: { Prefer: "return=minimal" },
         body: JSON.stringify({
           product_id: product_id ? Number(product_id) : null,
           product_name: product_name || "Batik",
@@ -112,10 +63,6 @@ module.exports = async (req, res) => {
         })
       });
 
-      if (!restRes.ok) {
-        const err = await restRes.json().catch(() => ({}));
-        return res.status(restRes.status).json({ error: err.message || "Gagal menyimpan pesanan." });
-      }
       return res.status(201).json({ success: true });
     }
 
@@ -131,28 +78,12 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: "ID dan status pesanan diperlukan." });
       }
 
-      const rows = await query(
-        "UPDATE public.orders SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *",
-        [status, Number(id)]
-      );
-
-      if (rows !== null) {
-        return res.status(200).json({ success: true, order: rows[0] });
-      }
-
-      // Fallback REST
-      const sbUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").replace(/\/+$/, "");
-      const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-      await fetch(`${sbUrl}/rest/v1/orders?id=eq.${id}`, {
+      await supabaseFetch(`orders?id=eq.${id}`, {
         method: "PATCH",
-        headers: {
-          apikey: sbKey,
-          Authorization: `Bearer ${sbKey}`,
-          "Content-Type": "application/json",
-          Prefer: "return=minimal"
-        },
+        headers: { Prefer: "return=minimal" },
         body: JSON.stringify({ status, updated_at: new Date().toISOString() })
       });
+
       return res.status(200).json({ success: true });
     }
 
@@ -168,26 +99,13 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: "ID pesanan diperlukan." });
       }
 
-      const rows = await query("DELETE FROM public.orders WHERE id = $1 RETURNING id", [Number(id)]);
-      if (rows !== null) {
-        return res.status(200).json({ success: true });
-      }
-
-      const sbUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").replace(/\/+$/, "");
-      const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-      await fetch(`${sbUrl}/rest/v1/orders?id=eq.${id}`, {
-        method: "DELETE",
-        headers: {
-          apikey: sbKey,
-          Authorization: `Bearer ${sbKey}`
-        }
-      });
+      await supabaseFetch(`orders?id=eq.${id}`, { method: "DELETE" });
       return res.status(200).json({ success: true });
     }
 
     return res.status(405).json({ error: "Method not allowed" });
   } catch (err) {
-    console.error("Orders API Error:", err);
-    return res.status(500).json({ error: err.message || "Internal server error" });
+    console.error("Orders error:", err);
+    return res.status(500).json({ error: err.message });
   }
 };

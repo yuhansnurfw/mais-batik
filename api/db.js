@@ -1,47 +1,48 @@
-// api/db.js - Database helper for Vercel Serverless Functions
-const { Pool } = require("pg");
+// api/db.js - Unified Database Client for Vercel Serverless Functions
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-let pool = null;
+function getSupabaseConfig() {
+  const url = (
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    "https://avlnhinsnjmvzzhtjoqx.supabase.co"
+  ).replace(/\/+$/, "");
 
-function getPool() {
-  const connectionString =
-    process.env.POSTGRES_URL ||
-    process.env.DATABASE_URL ||
-    process.env.POSTGRES_PRISMA_URL;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    "sb_publishable_pf4KLYf0_gyW3OKjWR40ow_sTP4WLRX";
 
-  if (!connectionString) return null;
-
-  if (!pool) {
-    pool = new Pool({
-      connectionString,
-      ssl: {
-        rejectUnauthorized: false
-      },
-      max: 5,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000
-    });
-  }
-  return pool;
+  return { url, key };
 }
 
-async function query(sql, params = []) {
-  const p = getPool();
-  if (p) {
-    const client = await p.connect();
-    try {
-      const res = await client.query(sql, params);
-      return res.rows;
-    } finally {
-      client.release();
-    }
+async function supabaseFetch(path, options = {}) {
+  const { url, key } = getSupabaseConfig();
+  const headers = {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+
+  const res = await fetch(`${url}/rest/v1/${path}`, {
+    ...options,
+    headers
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Supabase REST returned HTTP ${res.status}`);
   }
 
-  // Fallback ke Supabase REST jika POSTGRES_URL belum disetel
-  return null;
+  if (res.status === 204) return true;
+  const text = await res.text();
+  return text ? JSON.parse(text) : true;
 }
 
 module.exports = {
-  getPool,
-  query
+  getSupabaseConfig,
+  supabaseFetch
 };
