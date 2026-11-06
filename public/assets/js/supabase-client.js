@@ -11,6 +11,16 @@
       localUrl = localStorage.getItem("mais_batik_supabase_url") || "";
       localKey = localStorage.getItem("mais_batik_supabase_key") || "";
       localAdmin = localStorage.getItem("mais_batik_supabase_admin_key") || "";
+
+      // Otomatis hapus cache jika masih mengarah ke project lama
+      if (localUrl && (localUrl.includes("avlnhinsnjmvzzhtjoqx") || !localUrl.startsWith("http"))) {
+        localStorage.removeItem("mais_batik_supabase_url");
+        localStorage.removeItem("mais_batik_supabase_key");
+        localStorage.removeItem("mais_batik_supabase_admin_key");
+        localUrl = "";
+        localKey = "";
+        localAdmin = "";
+      }
     } catch (_) {}
 
     const winCfg = window.SUPABASE_CONFIG || {};

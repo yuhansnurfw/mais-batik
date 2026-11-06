@@ -2,7 +2,7 @@
  * Konfigurasi Supabase untuk Mais Batik
  */
 window.SUPABASE_CONFIG = {
-  url: "https://avlnhinsnjmvzzhtjoqx.supabase.co",
-  anonKey: "sb_publishable_pf4KLYf0_gyW3OKjWR40ow_sTP4WLRX",
+  url: "https://bexrsqqognilfdwzirmg.supabase.co",
+  anonKey: "sb_publishable_lCJE9uPdLmuQY-ol8hyHpQ_X6wMWf8r",
   adminKey: ""
 };

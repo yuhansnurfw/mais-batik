@@ -5,7 +5,7 @@ function getSupabaseConfig() {
   const url = (
     process.env.SUPABASE_URL ||
     process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    "https://avlnhinsnjmvzzhtjoqx.supabase.co"
+    "https://bexrsqqognilfdwzirmg.supabase.co"
   ).replace(/\/+$/, "");
 
   const key =
@@ -13,7 +13,7 @@ function getSupabaseConfig() {
     process.env.SUPABASE_SECRET_KEY ||
     process.env.SUPABASE_ANON_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    "sb_publishable_pf4KLYf0_gyW3OKjWR40ow_sTP4WLRX";
+    "sb_publishable_lCJE9uPdLmuQY-ol8hyHpQ_X6wMWf8r";
 
   return { url, key };
 }
